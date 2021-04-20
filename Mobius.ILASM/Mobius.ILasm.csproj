@@ -139,7 +139,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="dependencies\PEAPI\PEAPI.dll.sources" />
     <None Include="ilasm\parser\ILParser.jay" />
     <None Include="tests\assembly.il" />
     <None Include="tests\gen-array1.il" />
