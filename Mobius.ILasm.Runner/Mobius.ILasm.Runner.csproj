@@ -51,7 +51,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Mobius.ILasm\Mobius.ILasm.csproj">
-      <Project>{8d8ab45a-a2bf-4eb6-97ab-47c130c642d9}</Project>
+      <Project>{93dc6e05-d90f-444d-b6e2-887f7820e9fc}</Project>
       <Name>Mobius.ILasm</Name>
     </ProjectReference>
   </ItemGroup>
