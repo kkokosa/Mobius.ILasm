@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Mobius.ILasm.Core\Mobius.ILasm.Core.csproj" />
+    <ProjectReference Include="..\Mobius.ILasm\Mobius.ILasm.csproj" />
   </ItemGroup>
 
 </Project>
