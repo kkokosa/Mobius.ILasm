@@ -2,7 +2,7 @@
 
 namespace Mobius.ILasm.interfaces
 {
-    public interface ILog
+    public interface ILogger
     {
         void Info(string message);
         void Error(string message);

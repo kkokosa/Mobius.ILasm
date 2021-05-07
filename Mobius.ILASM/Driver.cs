@@ -17,25 +17,23 @@ namespace Mobius.ILasm.Core
     //and instead being changed to either the logger or FileProcessor.
     public class Driver
     {
-        private readonly ILog logger;
-        private readonly ILoggerFactory loggerFactory;
+        private readonly ILogger logger;
         enum Target
         {
             Dll,
             Exe
         }
 
-        public Driver(ILoggerFactory loggerFactory)
+        public Driver(ILogger logger)
         {
-            this.loggerFactory = loggerFactory;
-            logger = loggerFactory.Create();
+            this.logger = logger; ;            
         }
 
-        public int Assemble(string[] args)
+        public int Assemble(string[] args, Stream output)
         {
             System.Threading.Thread.CurrentThread.CurrentCulture = System.Globalization.CultureInfo.InvariantCulture;
 
-            DriverMain driver = new DriverMain(args, loggerFactory);
+            DriverMain driver = new DriverMain(args, logger);
             if (!driver.Run())
                 return 1;
             //Report.Message("Operation completed successfully");
@@ -59,17 +57,15 @@ namespace Mobius.ILasm.Core
             private CodeGen codegen;
             private bool keycontainer = false;
             private string keyname;
-            private readonly ILog logger;
-            private readonly ILoggerFactory loggerFactory;
+            private readonly ILogger logger;
 #if HAS_MONO_SECURITY
     			private StrongName sn;
 #endif
             bool noautoinherit;
 
-            public DriverMain(string[] args, ILoggerFactory loggerFactory)
+            public DriverMain(string[] args, ILogger logger)
             {
-                this.loggerFactory = loggerFactory;
-                logger = this.loggerFactory.Create();
+                this.logger = logger;
                 il_file_list = new ArrayList();
                 ParseArgs(args);
             }
@@ -205,7 +201,7 @@ namespace Mobius.ILasm.Core
 
                 //TODO - Wait to hear from Konrad on the approach, i.e. should we pass the same logger instance across all references
                 //or create a logger object for each reference.
-                ILParser parser = new ILParser(codegen, scanner, this.loggerFactory.Create());
+                ILParser parser = new ILParser(codegen, scanner, this.logger);
                 codegen.BeginSourceFile(file_path);
                 try
                 {

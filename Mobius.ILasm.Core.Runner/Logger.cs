@@ -1,24 +1,22 @@
 ﻿using Mobius.ILasm.interfaces;
 using Mono.ILASM;
-using NLog;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Mobius.ILasm.infrastructure
+namespace Mobius.ILasm.Core.Runner
 {
-    public class Logger : ILog
+    public class Logger : ILogger
     {
-        private readonly ILogger logger;
+        private static readonly NLog.Logger _logger = NLog.LogManager.GetCurrentClassLogger();        
 
-        public Logger(ILogger logger)
-        {
-            this.logger = logger;
+        public Logger()
+        {            
         }
 
         public void Error(string message)
         {
-            logger.Error(message);
+            _logger.Error(message);
         }
 
         public void Error(Location location, string message)
@@ -28,17 +26,17 @@ namespace Mobius.ILasm.infrastructure
                 location_str = " (" + location.line + ", " + location.column + ") : ";
 
             //TODO - Include File Path like in the report class.
-            logger.Error(string.Format("{0}Error : {1}", location_str, message));
+            _logger.Error(string.Format("{0}Error : {1}", location_str, message));
         }
 
         public void Info(string message)
         {
-            logger.Info(message);
+            _logger.Info(message);
         }
 
         public void Warning(string message)
         {
-            logger.Warn(message);
+            _logger.Warn(message);
         }
 
         public void Warning(Location location, string message)
@@ -49,7 +47,7 @@ namespace Mobius.ILasm.infrastructure
 
 
             //TODO - Include File Path like in the report class.
-            logger.Warn(string.Format("{0}Error : {1}", location_str, message));
+            _logger.Warn(string.Format("{0}Error : {1}", location_str, message));
         }
     }
 }

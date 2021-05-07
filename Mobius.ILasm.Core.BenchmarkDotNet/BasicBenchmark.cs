@@ -14,23 +14,33 @@ namespace Mobius.ILasm.Core.BenchmarkDotNet
     [NativeMemoryProfiler]
     public class BasicBenchmark
     {
-        private ILoggerFactory loggerFactory;
-        public BasicBenchmark()
+        private ILogger _logger;
+
+        [GlobalSetup]
+        public void Setup()
         {
-            this.loggerFactory = new LoggerFactory();
+            _logger = new NullLogger();
         }
+
         [Benchmark]
         public void GenerateDynamicallyLinkedLibrary()
         {
-            var driver = new Driver(loggerFactory);
-            driver.Assemble(new string[] {"resources/helloworldconsole.il", "/dll" });
+            // TODO: make it work :)
+            var driver = new Driver(_logger);
+            using (var memoryStream = new MemoryStream(...))
+            {
+                driver.Assemble(new string[] { "resources/helloworldconsole.il", "/dll" }, memoryStream);
+            }
         }
 
         [Benchmark]
         public void GenerateExecutable()
         {
-            var driver = new Driver(loggerFactory);
-            driver.Assemble(new string[] { "resources/helloworldconsole.il", "/exe" });
+            var driver = new Driver(_logger);
+            using (var memoryStream = new MemoryStream(...))
+            {
+                driver.Assemble(new string[] { "resources/helloworldconsole.il", "/exe" });
+            }
         }
     }
 }

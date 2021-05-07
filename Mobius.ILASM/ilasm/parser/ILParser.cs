@@ -40,7 +40,7 @@ namespace Mono.ILASM
         private ILTokenizer tokenizer;
         const int yacc_verbose_flag = 0;
         KeyValuePair<string, TypeAttr> current_extern;
-        private readonly ILog logger;
+        private readonly ILogger logger;
 
         class NameValuePair
         {
@@ -136,7 +136,7 @@ namespace Mono.ILASM
             return new PermPair((PEAPI.SecurityAction)action, iper);
         }
 
-        public ILParser(CodeGen codegen, ILTokenizer tokenizer, ILog logger)
+        public ILParser(CodeGen codegen, ILTokenizer tokenizer, ILogger logger)
         {
             this.codegen = codegen;
             this.tokenizer = tokenizer;
