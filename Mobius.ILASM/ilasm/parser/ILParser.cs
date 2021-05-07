@@ -20,6 +20,8 @@ using System.Security.Permissions;
 
 using MIPermission = Mono.ILASM.Permission;
 using MIPermissionSet = Mono.ILASM.PermissionSet;
+using Mobius.ILasm.interfaces;
+using Mobius.ILasm.infrastructure;
 
 namespace Mono.ILASM
 {
@@ -38,6 +40,7 @@ namespace Mono.ILASM
         private ILTokenizer tokenizer;
         const int yacc_verbose_flag = 0;
         KeyValuePair<string, TypeAttr> current_extern;
+        private readonly ILog logger;
 
         class NameValuePair
         {
@@ -70,7 +73,7 @@ namespace Mono.ILASM
                     action == System.Security.Permissions.SecurityAction.RequestOptional ||
                     action == System.Security.Permissions.SecurityAction.RequestRefuse) && !for_assembly)
             {
-                Report.Warning(String.Format("System.Security.Permissions.SecurityAction '{0}' is not valid for this declaration", action));
+                logger.Warning(String.Format("System.Security.Permissions.SecurityAction '{0}' is not valid for this declaration", action));
                 return false;
             }
 #pragma warning restore 618
@@ -89,7 +92,11 @@ namespace Mono.ILASM
             }
 
             if (!CheckSecurityActionValidity((System.Security.Permissions.SecurityAction)pp.sec_action, for_assembly))
-                Report.Error(String.Format("Invalid security action : {0}", pp.sec_action));
+
+            {
+                logger.Error(String.Format("Invalid security action : {0}", pp.sec_action));
+                FileProcessor.ErrorCount += 1;
+            }
 
             codegen.AddPermission(pp.sec_action, pp.perm);
         }
@@ -129,10 +136,11 @@ namespace Mono.ILASM
             return new PermPair((PEAPI.SecurityAction)action, iper);
         }
 
-        public ILParser(CodeGen codegen, ILTokenizer tokenizer)
+        public ILParser(CodeGen codegen, ILTokenizer tokenizer, ILog logger)
         {
             this.codegen = codegen;
             this.tokenizer = tokenizer;
+            this.logger = logger;
         }
 
         public CodeGen CodeGen
@@ -3787,7 +3795,10 @@ namespace Mono.ILASM
             else
                 codegen.CurrentCustomAttrTarget = codegen.CurrentTypeDef.GetGenericParam((string)yyVals[0 + yyTop]);
             if (codegen.CurrentCustomAttrTarget == null)
-                Report.Error(String.Format("Type parameter '{0}' undefined.", (string)yyVals[0 + yyTop]));
+            {
+                logger.Error(String.Format("Type parameter '{0}' undefined.", (string)yyVals[0 + yyTop]));
+                FileProcessor.ErrorCount += 1;
+            }    
         }
 
         void case_100()
@@ -3799,7 +3810,10 @@ namespace Mono.ILASM
             else
                 codegen.CurrentCustomAttrTarget = codegen.CurrentTypeDef.GetGenericParam(index - 1);
             if (codegen.CurrentCustomAttrTarget == null)
-                Report.Error(String.Format("Type parameter '{0}' index out of range.", index));
+            {
+                logger.Error(String.Format("Type parameter '{0}' index out of range.", index));
+                FileProcessor.ErrorCount += 1;
+            }
         }
 
         void case_101()
@@ -4040,7 +4054,10 @@ namespace Mono.ILASM
             int lower = (int)yyVals[-2 + yyTop];
             int upper = (int)yyVals[0 + yyTop];
             if (lower > upper)
-                Report.Error("Lower bound " + lower + " must be <= upper bound " + upper);
+            {
+                logger.Error("Lower bound " + lower + " must be <= upper bound " + upper);
+                FileProcessor.ErrorCount += 1;
+            }
 
             yyVal = new DictionaryEntry(yyVals[-2 + yyTop], yyVals[0 + yyTop]);
         }
@@ -4533,7 +4550,7 @@ namespace Mono.ILASM
 
             if (param == null)
             {
-                Report.Warning(tokenizer.Location, String.Format("invalid param index ({0}) with .param", index));
+                logger.Warning(tokenizer.Location, String.Format("invalid param index ({0}) with .param", index));
             }
             else if (yyVals[0 + yyTop] != null)
                 param.AddDefaultValue((Constant)yyVals[0 + yyTop]);
@@ -4648,7 +4665,10 @@ namespace Mono.ILASM
 #line 2339 "C:\Apps\mono\mcs\ilasm\parser\ILParser.jay"
         {
             if (yyVals[-1 + yyTop].GetType() == typeof(PrimitiveTypeRef))
-                Report.Error("Exception not be of a primitive type.");
+            {
+                logger.Error("Exception not be of a primitive type.");
+                FileProcessor.ErrorCount += 1;
+            }
 
             BaseTypeRef type = (BaseTypeRef)yyVals[-1 + yyTop];
             CatchBlock cb = new CatchBlock(type);
@@ -4740,7 +4760,10 @@ namespace Mono.ILASM
         {
             int slot = codegen.CurrentMethodDef.GetNamedLocalSlot((string)yyVals[0 + yyTop]);
             if (slot < 0)
-                Report.Error(String.Format("Undeclared identifier '{0}'", (string)yyVals[0 + yyTop]));
+            {
+                logger.Error(String.Format("Undeclared identifier '{0}'", (string)yyVals[0 + yyTop]));
+                FileProcessor.ErrorCount += 1;
+            }
             codegen.CurrentMethodDef.AddInstr(
                     new IntInstr((IntOp)yyVals[-1 + yyTop], slot, tokenizer.Location));
         }
@@ -4757,7 +4780,10 @@ namespace Mono.ILASM
         {
             int pos = codegen.CurrentMethodDef.GetNamedParamPos((string)yyVals[0 + yyTop]);
             if (pos < 0)
-                Report.Error(String.Format("Undeclared identifier '{0}'", (string)yyVals[0 + yyTop]));
+            {
+                logger.Error(String.Format("Undeclared identifier '{0}'", (string)yyVals[0 + yyTop]));
+                FileProcessor.ErrorCount += 1;
+            }
 
             codegen.CurrentMethodDef.AddInstr(
                     new IntInstr((IntOp)yyVals[-1 + yyTop], pos, tokenizer.Location));
@@ -4775,7 +4801,10 @@ namespace Mono.ILASM
         {
             int slot = codegen.CurrentMethodDef.GetNamedLocalSlot((string)yyVals[0 + yyTop]);
             if (slot < 0)
-                Report.Error(String.Format("Undeclared identifier '{0}'", (string)yyVals[0 + yyTop]));
+            {
+                logger.Error(String.Format("Undeclared identifier '{0}'", (string)yyVals[0 + yyTop]));
+                FileProcessor.ErrorCount += 1;
+            }
             codegen.CurrentMethodDef.AddInstr(new
                     IntInstr((IntOp)yyVals[-1 + yyTop], slot, tokenizer.Location));
         }

@@ -1,4 +1,6 @@
-﻿using Mono.ILASM;
+﻿using Mobius.ILasm.infrastructure;
+using Mobius.ILasm.interfaces;
+using Mono.ILASM;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -6,29 +8,42 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ILAsmException = Mobius.ILasm.infrastructure.ILAsmException;
 
 namespace Mobius.ILasm.Core
 {
+    //TODO - Search for all TODO references before starting code again. 
+    //This repo contains code where references of Report.cs are being removed
+    //and instead being changed to either the logger or FileProcessor.
     public class Driver
     {
+        private readonly ILog logger;
+        private readonly ILoggerFactory loggerFactory;
         enum Target
         {
             Dll,
             Exe
         }
 
+        public Driver(ILoggerFactory loggerFactory)
+        {
+            this.loggerFactory = loggerFactory;
+            logger = loggerFactory.Create();
+        }
+
         public int Assemble(string[] args)
         {
             System.Threading.Thread.CurrentThread.CurrentCulture = System.Globalization.CultureInfo.InvariantCulture;
 
-            DriverMain driver = new DriverMain(args);
+            DriverMain driver = new DriverMain(args, loggerFactory);
             if (!driver.Run())
                 return 1;
-            Report.Message("Operation completed successfully");
+            //Report.Message("Operation completed successfully");
+            logger.Info("Operation completed successfully");
             return 0;
         }
 
-        private class DriverMain
+        public class DriverMain
         {
 
             private ArrayList il_file_list;
@@ -44,13 +59,17 @@ namespace Mobius.ILasm.Core
             private CodeGen codegen;
             private bool keycontainer = false;
             private string keyname;
+            private readonly ILog logger;
+            private readonly ILoggerFactory loggerFactory;
 #if HAS_MONO_SECURITY
     			private StrongName sn;
 #endif
             bool noautoinherit;
 
-            public DriverMain(string[] args)
+            public DriverMain(string[] args, ILoggerFactory loggerFactory)
             {
+                this.loggerFactory = loggerFactory;
+                logger = this.loggerFactory.Create();
                 il_file_list = new ArrayList();
                 ParseArgs(args);
             }
@@ -66,7 +85,7 @@ namespace Mobius.ILasm.Core
                     codegen = new CodeGen(output_file, target == Target.Dll, debugging_info, noautoinherit);
                     foreach (string file_path in il_file_list)
                     {
-                        Report.FilePath = file_path;
+                        FileProcessor.FilePath = file_path;
                         ProcessFile(file_path);
                     }
                     if (scan_only)
@@ -76,7 +95,10 @@ namespace Mobius.ILasm.Core
                         return false;
 
                     if (target != Target.Dll && !codegen.HasEntryPoint)
-                        Report.Error("No entry point found.");
+                    {
+                        logger.Error("No entry point found.");
+                        FileProcessor.ErrorCount += 1;
+                    }
 
                     // if we have a key and aren't assembling a netmodule
                     if ((keyname != null) && !codegen.IsThisAssembly(null))
@@ -102,12 +124,12 @@ namespace Mobius.ILasm.Core
                 }
                 catch (ILAsmException e)
                 {
-                    Error(e.ToString());
+                    logger.Error(e.ToString());
                     return false;
                 }
                 catch (PEAPI.PEFileException pe)
                 {
-                    Error("Error : " + pe.Message);
+                    logger.Error("Error : " + pe.Message);
                     return false;
                 }
 
@@ -123,12 +145,6 @@ namespace Mobius.ILasm.Core
 #endif
 
                 return true;
-            }
-
-            private void Error(string message)
-            {
-                Console.WriteLine(message + "\n");
-                Console.WriteLine("***** FAILURE *****\n");
             }
 
 #if HAS_MONO_SECURITY
@@ -163,12 +179,10 @@ namespace Mobius.ILasm.Core
             {
                 if (!File.Exists(file_path))
                 {
-                    Console.WriteLine("File does not exist: {0}",
-                            file_path);
+                    logger.Error($"File does not exist: {file_path}");
                     Environment.Exit(2);
                 }
-                Report.AssembleFile(file_path, null,
-                                target_string, output_file);
+                logger.Info($"Assembling '{file_path}' , {FileProcessor.GetListing(null)}, to {target_string} --> '{output_file}'");
                 StreamReader reader = File.OpenText(file_path);
                 ILTokenizer scanner = new ILTokenizer(reader);
 
@@ -184,12 +198,14 @@ namespace Mobius.ILasm.Core
                     ILToken tok;
                     while ((tok = scanner.NextToken) != ILToken.EOF)
                     {
-                        Console.WriteLine(tok);
+                        logger.Info(tok.ToString());
                     }
                     return;
                 }
 
-                ILParser parser = new ILParser(codegen, scanner);
+                //TODO - Wait to hear from Konrad on the approach, i.e. should we pass the same logger instance across all references
+                //or create a logger object for each reference.
+                ILParser parser = new ILParser(codegen, scanner, this.loggerFactory.Create());
                 codegen.BeginSourceFile(file_path);
                 try
                 {
@@ -400,6 +416,19 @@ namespace Mobius.ILasm.Core
                 string version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
                 Console.WriteLine("Mono IL assembler compiler version {0}", version);
                 Environment.Exit(0);
+            }
+
+            private void AssembleFile(string file, string listing,
+                                  string target, string output)
+            {
+                logger.Info($"Assembling '{file}' , {GetListing(listing)}, to {target} --> '{output}'");
+            }
+
+            private static string GetListing(string listing)
+            {
+                if (listing == null)
+                    return "no listing file";
+                return listing;
             }
 
         }

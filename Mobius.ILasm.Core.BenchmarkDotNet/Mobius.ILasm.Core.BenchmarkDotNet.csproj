@@ -8,6 +8,8 @@
   <ItemGroup>
     <PackageReference Include="BenchmarkDotNet" Version="0.12.1" />
     <PackageReference Include="BenchmarkDotNet.Diagnostics.Windows" Version="0.12.1" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="5.0.0" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,5 +1,7 @@
 ﻿using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Diagnostics.Windows.Configs;
+using Mobius.ILasm.infrastructure;
+using Mobius.ILasm.interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,17 +14,22 @@ namespace Mobius.ILasm.Core.BenchmarkDotNet
     [NativeMemoryProfiler]
     public class BasicBenchmark
     {
+        private ILoggerFactory loggerFactory;
+        public BasicBenchmark()
+        {
+            this.loggerFactory = new LoggerFactory();
+        }
         [Benchmark]
         public void GenerateDynamicallyLinkedLibrary()
         {
-            var driver = new Driver();
+            var driver = new Driver(loggerFactory);
             driver.Assemble(new string[] {"resources/helloworldconsole.il", "/dll" });
         }
 
         [Benchmark]
         public void GenerateExecutable()
         {
-            var driver = new Driver();
+            var driver = new Driver(loggerFactory);
             driver.Assemble(new string[] { "resources/helloworldconsole.il", "/exe" });
         }
     }
