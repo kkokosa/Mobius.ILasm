@@ -156,11 +156,6 @@ namespace Mono.ILASM
 
 #line default
 
-        /** error output stream.
-            It should be changeable.
-          */
-        public System.IO.TextWriter ErrorOutput = System.Console.Out;
-
         /** simplified error message.
             @see <a href="#yyerror(java.lang.String, java.lang.String[])">yyerror</a>
           */
@@ -181,13 +176,12 @@ namespace Mono.ILASM
         {
             if ((yacc_verbose_flag > 0) && (expected != null) && (expected.Length > 0))
             {
-                ErrorOutput.Write(message + ", expecting");
+                logger.Error(message + ", expecting");
                 for (int n = 0; n < expected.Length; ++n)
-                    ErrorOutput.Write(" " + expected[n]);
-                ErrorOutput.WriteLine();
+                    logger.Error(" " + expected[n]);
             }
             else
-                ErrorOutput.WriteLine(message);
+                logger.Error(message);
         }
 
         /** debugging support, requires the package jay.yydebug.

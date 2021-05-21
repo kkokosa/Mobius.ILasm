@@ -26,10 +26,10 @@ namespace Mobius.ILasm.Core
 
         public Driver(ILogger logger)
         {
-            this.logger = logger; ;            
+            this.logger = logger; ;
         }
 
-        public int Assemble(string[] args, Stream output)
+        public int Assemble(string[] args)
         {
             System.Threading.Thread.CurrentThread.CurrentCulture = System.Globalization.CultureInfo.InvariantCulture;
 
@@ -66,28 +66,33 @@ namespace Mobius.ILasm.Core
             public DriverMain(string[] args, ILogger logger)
             {
                 this.logger = logger;
+                //can take a list of files to assemble
                 il_file_list = new ArrayList();
                 ParseArgs(args);
             }
 
             public bool Run()
             {
+                //Call the assembler without any arguments, results in console output of it's usage information
                 if (il_file_list.Count == 0)
                     Usage();
+                //TODO needs to go as we will be using a Stream instead of a FileStream going forward.
                 if (output_file == null)
                     output_file = CreateOutputFilename();
                 try
                 {
-                    codegen = new CodeGen(output_file, target == Target.Dll, debugging_info, noautoinherit);
+                    codegen = new CodeGen(logger, output_file, target == Target.Dll, debugging_info, noautoinherit);
                     foreach (string file_path in il_file_list)
                     {
+                        //The filepath needs to go as we will be using stream
+                        //but we need a mechanism to keep information about every stream
                         FileProcessor.FilePath = file_path;
                         ProcessFile(file_path);
                     }
                     if (scan_only)
                         return true;
 
-                    if (Report.ErrorCount > 0)
+                    if (FileProcessor.ErrorCount > 0)
                         return false;
 
                     if (target != Target.Dll && !codegen.HasEntryPoint)
@@ -199,8 +204,7 @@ namespace Mobius.ILasm.Core
                     return;
                 }
 
-                //TODO - Wait to hear from Konrad on the approach, i.e. should we pass the same logger instance across all references
-                //or create a logger object for each reference.
+
                 ILParser parser = new ILParser(codegen, scanner, this.logger);
                 codegen.BeginSourceFile(file_path);
                 try
@@ -213,11 +217,11 @@ namespace Mobius.ILasm.Core
                 }
                 catch (ILTokenizingException ilte)
                 {
-                    Report.Error(ilte.Location, "syntax error at token '" + ilte.Token + "'");
+                    logger.Error(ilte.Location, "syntax error at token '" + ilte.Token + "'");
                 }
                 catch (Mono.ILASM.yyParser.yyException ye)
                 {
-                    Report.Error(scanner.Reader.Location, ye.Message);
+                    logger.Error(scanner.Reader.Location, ye.Message);
                 }
                 catch (ILAsmException ie)
                 {
@@ -265,8 +269,10 @@ namespace Mobius.ILasm.Core
             private void ParseArgs(string[] args)
             {
                 string command_arg;
+                //Processes a list of .il files to assemble as iterates over every string object in the input array
                 foreach (string str in args)
                 {
+                    //default case where only the path of the .il file is given.
                     if ((str[0] != '-') && (str[0] != '/'))
                     {
                         il_file_list.Add(str);
@@ -286,9 +292,10 @@ namespace Mobius.ILasm.Core
                             target = Target.Dll;
                             target_string = "dll";
                             break;
-                        case "quiet":
-                            Report.Quiet = true;
-                            break;
+                        //This option must be removed as earlier this was used to suppress any logging via the Report.cs
+                        //case "quiet":
+                        //    Report.Quiet = true;
+                        //    break;
                         case "debug":
                         case "deb":
                             debugging_info = true;
@@ -430,5 +437,5 @@ namespace Mobius.ILasm.Core
         }
     }
 
- 
+
 }
