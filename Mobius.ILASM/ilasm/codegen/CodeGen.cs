@@ -83,7 +83,7 @@ namespace Mono.ILASM
                 symwriter = new SymbolWriter(output_file);
 
             type_manager = new TypeManager(this);
-            extern_table = new ExternTable();
+            extern_table = new ExternTable(logger);
             typedef_stack = new ArrayList();
             typedef_stack_top = 0;
             global_field_table = new Hashtable();
@@ -205,7 +205,7 @@ namespace Mono.ILASM
 
             if (methref == null)
             {
-                methref = new GlobalMethodRef(ret_type, call_conv, name, param, gen_param_count);
+                methref = new GlobalMethodRef(ret_type, call_conv, name, param, gen_param_count, logger);
                 global_methodref_table[key] = methref;
             }
 
@@ -267,7 +267,7 @@ namespace Mono.ILASM
 
         public void SetModuleName(string module_name)
         {
-            this_module = new Module(module_name);
+            this_module = new Module(module_name, logger);
             CurrentCustomAttrTarget = this_module;
         }
 
@@ -345,7 +345,7 @@ namespace Mono.ILASM
             }
 
             typedef = new TypeDef(attr, current_namespace,
-                            name, parent, impl_list, location, gen_params, outer);
+                            name, parent, impl_list, location, gen_params, outer, logger);
             typedef.NoAutoInherit = noautoinherit && parent == null;
             type_manager[cache_name] = typedef;
             current_customattrtarget = current_typedef = typedef;
@@ -498,7 +498,7 @@ namespace Mono.ILASM
             try
             {
                 if (ThisModule == null)
-                    this_module = new Module(Path.GetFileName(output_file));
+                    this_module = new Module(Path.GetFileName(output_file), logger);
 
                 out_stream = new FileStream(output_file, FileMode.Create, FileAccess.Write);
                 pefile = new PEFile(ThisAssembly != null ? ThisAssembly.Name : null, ThisModule.Name, is_dll, ThisAssembly != null, null, out_stream);

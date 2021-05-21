@@ -23,21 +23,18 @@ namespace Mono.ILASM
     {
 
         private Location location;
-        private ILogger logger;
         public static readonly TypeRef Ellipsis = new TypeRef(null, "ELLIPSIS", false, null);
         public static readonly TypeRef Any = new TypeRef(null, "any", false, null);
-            
+
         public TypeRef(ILogger logger, string full_name, bool is_valuetype, Location location)
                 : this(logger, full_name, is_valuetype, location, null, null)
         {
-            this.logger = logger;
         }
 
         public TypeRef(ILogger logger, string full_name, bool is_valuetype, Location location, ArrayList conv_list, string sig_mod)
-                : base(full_name, is_valuetype, conv_list, sig_mod)
+                : base(full_name, is_valuetype, conv_list, sig_mod, logger)
         {
             this.location = location;
-            this.logger = logger;
         }
 
         public override BaseTypeRef Clone()
@@ -49,9 +46,9 @@ namespace Mono.ILASM
                 PEAPI.CallConv call_conv, string name, BaseTypeRef[] param, int gen_param_count)
         {
             if (SigMod == null | SigMod == "")
-                return new MethodRef(this, call_conv, ret_type, name, param, gen_param_count);
+                return new MethodRef(this, call_conv, ret_type, name, param, gen_param_count, logger);
             else
-                return new TypeSpecMethodRef(this, call_conv, ret_type, name, param, gen_param_count);
+                return new TypeSpecMethodRef(this, call_conv, ret_type, name, param, gen_param_count, logger);
         }
 
         protected override IFieldRef CreateFieldRef(BaseTypeRef ret_type, string name)
