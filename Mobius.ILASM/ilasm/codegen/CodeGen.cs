@@ -57,7 +57,7 @@ namespace Mono.ILASM
         private FileRef file_ref;
         private ArrayList manifestResources;
         private Hashtable typeref_table;
-
+        private MemoryStream stream;
         private ArrayList defcont_list;
 
         private int sub_system;
@@ -72,10 +72,11 @@ namespace Mono.ILASM
 
         private Module this_module;
 
-        public CodeGen(ILogger logger, string output_file, bool is_dll, bool debugging_info, bool noautoinherit)
+        public CodeGen(ILogger logger, string output_file, MemoryStream stream, bool is_dll, bool debugging_info, bool noautoinherit)
         {
             this.logger = logger;
             this.output_file = output_file;
+            this.stream = stream;
             this.is_dll = is_dll;
             this.noautoinherit = noautoinherit;
 
@@ -493,15 +494,16 @@ namespace Mono.ILASM
 
         public void Write()
         {
-            FileStream out_stream = null;
+            //FileStream out_stream = null;
 
             try
             {
                 if (ThisModule == null)
                     this_module = new Module(Path.GetFileName(output_file), logger);
 
-                out_stream = new FileStream(output_file, FileMode.Create, FileAccess.Write);
-                pefile = new PEFile(ThisAssembly != null ? ThisAssembly.Name : null, ThisModule.Name, is_dll, ThisAssembly != null, null, out_stream);
+                //out_stream = new FileStream(output_file, FileMode.Create, FileAccess.Write);
+                
+                pefile = new PEFile(ThisAssembly != null ? ThisAssembly.Name : null, ThisModule.Name, is_dll, ThisAssembly != null, null, stream);
                 PEAPI.Assembly asmb = pefile.GetThisAssembly();
 
                 ThisModule.PeapiModule = pefile.GetThisModule();
@@ -544,6 +546,9 @@ namespace Mono.ILASM
                 if (stack_reserve != -1)
                     pefile.SetStackReserve(stack_reserve);
 
+                //PEAPI closes the stream as expected as it was using a filestream
+                //but given that we are now using a memory stream, the stream close
+                //has been commented out. Need to revisit the code to 
                 pefile.WritePEFile();
 
                 if (symwriter != null)
@@ -552,11 +557,15 @@ namespace Mono.ILASM
                     symwriter.Write(guid);
                 }
             }
-            finally
+            catch(Exception ex)
             {
-                if (out_stream != null)
-                    out_stream.Close();
+                logger.Error(ex.Message);
             }
+            //finally
+            //{
+            //    if (stream != null)
+            //        stream.Close();
+            //}
         }
 
         public PEAPI.Method ResolveMethod(string signature)

@@ -29,11 +29,24 @@ namespace Mobius.ILasm.Core
             this.logger = logger; ;
         }
 
-        public int Assemble(string[] args)
+        //public int Assemble(string[] args)
+        //{
+        //    System.Threading.Thread.CurrentThread.CurrentCulture = System.Globalization.CultureInfo.InvariantCulture;
+
+        //    DriverMain driver = new DriverMain(args, logger);
+        //    if (!driver.Run())
+        //        return 1;
+        //    //Report.Message("Operation completed successfully");
+        //    logger.Info("Operation completed successfully");
+        //    return 0;
+        //}
+
+
+        public int Assemble(string[] args, MemoryStream memoryStream)
         {
             System.Threading.Thread.CurrentThread.CurrentCulture = System.Globalization.CultureInfo.InvariantCulture;
 
-            DriverMain driver = new DriverMain(args, logger);
+            DriverMain driver = new DriverMain(args, logger, memoryStream);
             if (!driver.Run())
                 return 1;
             //Report.Message("Operation completed successfully");
@@ -58,14 +71,16 @@ namespace Mobius.ILasm.Core
             private bool keycontainer = false;
             private string keyname;
             private readonly ILogger logger;
+            private MemoryStream stream;
 #if HAS_MONO_SECURITY
     			private StrongName sn;
 #endif
             bool noautoinherit;
 
-            public DriverMain(string[] args, ILogger logger)
+            public DriverMain(string[] args, ILogger logger, MemoryStream stream)
             {
                 this.logger = logger;
+                this.stream = stream;
                 //can take a list of files to assemble
                 il_file_list = new ArrayList();
                 ParseArgs(args);
@@ -77,17 +92,17 @@ namespace Mobius.ILasm.Core
                 if (il_file_list.Count == 0)
                     Usage();
                 //TODO needs to go as we will be using a Stream instead of a FileStream going forward.
-                if (output_file == null)
-                    output_file = CreateOutputFilename();
+                //if (output_file == null)
+                //    output_file = CreateOutputFilename();
                 try
                 {
-                    codegen = new CodeGen(logger, output_file, target == Target.Dll, debugging_info, noautoinherit);
+                    codegen = new CodeGen(logger, output_file, stream, target == Target.Dll, debugging_info, noautoinherit);
                     foreach (string file_path in il_file_list)
                     {
                         //The filepath needs to go as we will be using stream
                         //but we need a mechanism to keep information about every stream
                         FileProcessor.FilePath = file_path;
-                        ProcessFile(file_path);
+                        ProcessFile(file_path, stream);
                     }
                     if (scan_only)
                         return true;
@@ -176,15 +191,16 @@ namespace Mobius.ILasm.Core
     			}
 #endif
 
-            private void ProcessFile(string file_path)
+            private void ProcessFile(string file_path, MemoryStream stream)
             {
-                if (!File.Exists(file_path))
+                if (stream == null)
                 {
-                    logger.Error($"File does not exist: {file_path}");
+                    logger.Error($"Stream is empty!");
                     Environment.Exit(2);
                 }
-                logger.Info($"Assembling '{file_path}' , {FileProcessor.GetListing(null)}, to {target_string} --> '{output_file}'");
-                StreamReader reader = File.OpenText(file_path);
+                //TODO figure out how to log with the correct IL input filename
+                //logger.Info($"Assembling '{file_path}' , {FileProcessor.GetListing(null)}, to {target_string} --> '{output_file}'");
+                StreamReader reader = new StreamReader(stream);
                 ILTokenizer scanner = new ILTokenizer(reader);
 
                 if (show_tokens)

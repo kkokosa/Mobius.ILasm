@@ -284,7 +284,11 @@ namespace PEAPI {
 			WriteHeader();
 			WriteSections();
 			Flush();
-			Close();
+
+			//Read the comment in CodeGen.cs (line #552) for 
+			//context on why this has been commented out.
+			//This code needs to be fixed properly to cater for multiple options.
+			//Close();
 		}
 
 		private void WriteHeader() 
