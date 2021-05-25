@@ -8,20 +8,13 @@ namespace Mobius.ILasm.Core.Runner
         static void Main(string[] args)
         {
             var logger = new Logger();
-            var driver = new Driver(logger);
+            var driver = new Driver(logger);            
 
-            //driver.Assemble(args);
+            using var memoryStream = new MemoryStream();
+            driver.Assemble(new string[] { "./resources/helloworldconsole.il", "/exe" }, memoryStream);
 
-            using (var memoryStream = new MemoryStream())
-            {
-                driver.Assemble(new string[] { "resources/helloworldconsole.il", "/dll" }, memoryStream);
-                memoryStream.Position = 0;
-                using(BinaryReader reader = new BinaryReader(memoryStream))
-                {
-                    for (int i =0; i < memoryStream.Length - 1; i++)
-                        System.Console.WriteLine(reader.ReadByte());
-                }
-            }
+            using FileStream fileStream = new FileStream("file.exe", FileMode.Create, FileAccess.Write);
+            memoryStream.WriteTo(fileStream);
         }
     }
 }
