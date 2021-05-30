@@ -200,7 +200,7 @@ namespace Mobius.ILasm.Core
                 }
                 //TODO figure out how to log with the correct IL input filename
                 //logger.Info($"Assembling '{file_path}' , {FileProcessor.GetListing(null)}, to {target_string} --> '{output_file}'");
-                StreamReader reader = new StreamReader(stream);
+                StreamReader reader = File.OpenText(file_path);
                 ILTokenizer scanner = new ILTokenizer(reader);
 
                 if (show_tokens)
