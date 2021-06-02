@@ -31,20 +31,17 @@ namespace Mobius.ILasm.Tests
 
             var assertLine = File.ReadLines(filename)
                                  .FirstOrDefault(line => line.StartsWith("// Assert result"));
-            if (assertLine is not null)
-            {
-                var match = Regex.Match(assertLine, @"\/\/ Assert result (\d+)");
-                if (match.Success)
-                {
-                    var expected = int.Parse(match.Groups[1].Value);
-                    Assert.Equal(expected, result);
-                }
-            }
+            Assert.NotNull(assertLine);
+            
+            var match = Regex.Match(assertLine, @"\/\/ Assert result (\d+)");
+            Assert.True(match.Success);
+
+            var expected = int.Parse(match.Groups[1].Value);
+            Assert.Equal(expected, result);
         }
     }
 
-
-
+    // TODO: Mock it with Moq
     internal class Logger : ILogger
     {
         public Logger()
