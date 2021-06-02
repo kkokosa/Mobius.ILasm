@@ -46,6 +46,9 @@ namespace Mobius.ILasm.Core
         {
             System.Threading.Thread.CurrentThread.CurrentCulture = System.Globalization.CultureInfo.InvariantCulture;
 
+            // TODO: improve error reporting:
+            //  - return true/false
+            //  - expose Errors property as a list (filename, errormessage)
             DriverMain driver = new DriverMain(args, logger, memoryStream);
             if (!driver.Run())
                 return 1;

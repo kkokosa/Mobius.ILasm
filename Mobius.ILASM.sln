@@ -9,6 +9,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mobius.ILasm.Core.Benchmark
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mobius.ILasm", "Mobius.ILasm\Mobius.ILasm.csproj", "{93DC6E05-D90F-444D-B6E2-887F7820E9FC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mobius.ILasm.Tests", "Mobius.ILasm.Tests\Mobius.ILasm.Tests.csproj", "{82227D4A-0D07-4621-BDC8-A508AADB7ABF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -41,6 +43,14 @@ Global
 		{93DC6E05-D90F-444D-B6E2-887F7820E9FC}.Release|Any CPU.Build.0 = Release|Any CPU
 		{93DC6E05-D90F-444D-B6E2-887F7820E9FC}.Release|x64.ActiveCfg = Release|x64
 		{93DC6E05-D90F-444D-B6E2-887F7820E9FC}.Release|x64.Build.0 = Release|x64
+		{82227D4A-0D07-4621-BDC8-A508AADB7ABF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{82227D4A-0D07-4621-BDC8-A508AADB7ABF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{82227D4A-0D07-4621-BDC8-A508AADB7ABF}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{82227D4A-0D07-4621-BDC8-A508AADB7ABF}.Debug|x64.Build.0 = Debug|Any CPU
+		{82227D4A-0D07-4621-BDC8-A508AADB7ABF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{82227D4A-0D07-4621-BDC8-A508AADB7ABF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{82227D4A-0D07-4621-BDC8-A508AADB7ABF}.Release|x64.ActiveCfg = Release|Any CPU
+		{82227D4A-0D07-4621-BDC8-A508AADB7ABF}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

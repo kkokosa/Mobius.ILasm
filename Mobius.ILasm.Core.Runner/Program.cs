@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Reflection;
 
 namespace Mobius.ILasm.Core.Runner
 {
@@ -8,8 +9,10 @@ namespace Mobius.ILasm.Core.Runner
         static void Main(string[] args)
         {
             var logger = new Logger();
-            var driver = new Driver(logger);            
+            var driver = new Driver(logger);
 
+            // TODO: make proper command args handling
+            // Maybe using https://github.com/adamabdelhamed/PowerArgs or sth else
             using var memoryStream = new MemoryStream();
             driver.Assemble(new string[] { "./resources/helloworldconsole.il", "/exe" }, memoryStream);
 
