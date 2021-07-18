@@ -20,6 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Mobius.ILasm.Tests.SourceGenerator\Mobius.ILasm.Tests.SourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false"/>
     <ProjectReference Include="..\Mobius.ILasm\Mobius.ILasm.csproj" />
   </ItemGroup>
 

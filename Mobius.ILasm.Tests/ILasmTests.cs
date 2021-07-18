@@ -6,12 +6,14 @@ using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using Xunit;
+using Mobius.ILasm.Tests.SourceGenerator;
 
 namespace Mobius.ILasm.Tests
 {
     // TODO: Create source generator to iterate through directory and generate test methods
     // [GenerateMethods("./trivial/*.il")]
-    public class UnitTest1
+    [GenerateTestMethods("./trivial/*.il")]
+    public partial class ILasmTests
     {
         [Fact]
         public void Test_helloworldconsole() 
