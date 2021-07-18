@@ -36,16 +36,18 @@ namespace Mono.ILASM
         protected ArrayList customattr_list;
         protected bool is_resolved;
         private ILogger logger;
+        private Dictionary<string, string> errors;
 
         public abstract void Resolve(CodeGen codegen);
         public abstract PEAPI.IExternRef GetExternRef();
 
-        public ExternRef(string name, ILogger logger)
+        public ExternRef(string name, ILogger logger, Dictionary<string, string> errors)
         {
             this.name = name;
             this.logger = logger;
             typeref_table = new Hashtable();
             class_table = new Hashtable();
+            this.errors = errors;
         }
 
         public string Name
@@ -86,7 +88,7 @@ namespace Mono.ILASM
             }
             else
             {
-                type_ref = new ExternTypeRef(this, logger, first, is_valuetype);
+                type_ref = new ExternTypeRef(this, logger, first, is_valuetype, errors);
                 typeref_table[first] = type_ref;
             }
 
@@ -119,7 +121,7 @@ namespace Mono.ILASM
 
         public PEAPI.ModuleRef ModuleRef;
 
-        public ExternModule(string name, ILogger logger) : base(name, logger)
+        public ExternModule(string name, ILogger logger, Dictionary<string, string> errors) : base(name, logger, errors)
         {
         }
 
@@ -168,7 +170,7 @@ namespace Mono.ILASM
         //flags
         private PEAPI.AssemAttr attr;
 
-        public ExternAssembly(string name, AssemblyName asmb_name, PEAPI.AssemAttr attr, ILogger logger) : base(name, logger)
+        public ExternAssembly(string name, AssemblyName asmb_name, PEAPI.AssemAttr attr, ILogger logger, Dictionary<string, string> errors) : base(name, logger, errors)
         {
             this.name = name;
             this.asmb_name = asmb_name;
@@ -314,10 +316,12 @@ namespace Mono.ILASM
 
         bool is_resolved;
         ILogger logger;
+        private Dictionary<string, string> errors;
 
         public ExternTable(ILogger logger)
         {
             this.logger = logger;
+            this.errors = errors;
         }
 
         public void AddCorlib()
@@ -348,7 +352,7 @@ namespace Mono.ILASM
                     return ea;
             }
 
-            ea = new ExternAssembly(name, asmb_name, attr, logger);
+            ea = new ExternAssembly(name, asmb_name, attr, logger, errors);
 
             assembly_table[name] = ea;
 
@@ -370,7 +374,7 @@ namespace Mono.ILASM
                     return em;
             }
 
-            em = new ExternModule(name, logger);
+            em = new ExternModule(name, logger, errors);
 
             module_table[name] = em;
 
@@ -439,7 +443,7 @@ namespace Mono.ILASM
             if (mod == null)
             {
                 logger.Error("Module " + mod_name + " not defined.");
-                FileProcessor.ErrorCount += 1;
+                errors[nameof(ExternTable)] = $"Module {mod_name} not defined.";
             }
 
             return mod.GetTypeRef(full_name, is_valuetype);
@@ -454,7 +458,7 @@ namespace Mono.ILASM
             if (ass == null)
             {
                 logger.Error("Assembly " + assembly_name + " is not defined.");
-                FileProcessor.ErrorCount += 1;
+                errors[nameof(ExternTable)] = $"Assembly {assembly_name} not defined.";
             }
 
             return ass;

@@ -12,6 +12,7 @@ using Mobius.ILasm.infrastructure;
 using Mobius.ILasm.interfaces;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 
 namespace Mono.ILASM
 {
@@ -31,13 +32,15 @@ namespace Mono.ILASM
         private ArrayList other_list;
         private MethodRef removeon;
         private ILogger logger;
+        private Dictionary<string, string> errors;
 
-        public EventDef(FeatureAttr attr, BaseTypeRef type, string name, ILogger logger)
+        public EventDef(FeatureAttr attr, BaseTypeRef type, string name, ILogger logger, Dictionary<string, string> errors)
         {
             this.attr = attr;
             this.name = name;
             this.type = type;
             this.logger = logger;
+            this.errors = errors;
             is_resolved = false;
         }
 
@@ -78,7 +81,7 @@ namespace Mono.ILASM
             if (methoddef == null)
             {
                 logger.Error(type + " method of event " + name + " not found");
-                FileProcessor.ErrorCount += 1;
+                errors[nameof(EventDef)] = $"{type} method of event {name} not found";
             }
             return methoddef;
         }

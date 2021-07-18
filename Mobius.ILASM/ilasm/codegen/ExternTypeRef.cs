@@ -11,6 +11,7 @@
 using Mobius.ILasm.interfaces;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 
 namespace Mono.ILASM
 {
@@ -25,14 +26,14 @@ namespace Mono.ILASM
         private Hashtable nestedtypes_table;
         private Hashtable nestedclass_table;
 
-        public ExternTypeRef(IScope extern_ref, ILogger logger, string full_name, bool is_valuetype)
-                : this(extern_ref, logger, full_name, is_valuetype, null, null)
+        public ExternTypeRef(IScope extern_ref, ILogger logger, string full_name, bool is_valuetype, Dictionary<string, string> errors)
+                : this(extern_ref, logger, full_name, is_valuetype, null, null, errors)
         {
         }
 
         private ExternTypeRef(IScope extern_ref, ILogger logger, string full_name,
-                        bool is_valuetype, ArrayList conv_list, string sig_mod)
-    : base(full_name, is_valuetype, conv_list, sig_mod, logger)
+                        bool is_valuetype, ArrayList conv_list, string sig_mod, Dictionary<string, string> errors)
+    : base(full_name, is_valuetype, conv_list, sig_mod, logger, errors)
         {
             this.extern_ref = extern_ref;
 
@@ -43,7 +44,7 @@ namespace Mono.ILASM
         public override BaseTypeRef Clone()
         {
             return new ExternTypeRef(extern_ref, logger, full_name, is_valuetype,
-                            (ArrayList)ConversionList.Clone(), sig_mod);
+                            (ArrayList)ConversionList.Clone(), sig_mod, errors);
         }
 
         public override string FullName
@@ -86,7 +87,7 @@ namespace Mono.ILASM
         protected override BaseMethodRef CreateMethodRef(BaseTypeRef ret_type, PEAPI.CallConv call_conv,
                         string name, BaseTypeRef[] param, int gen_param_count)
         {
-            return new ExternMethodRef(this, ret_type, call_conv, name, param, gen_param_count, logger);
+            return new ExternMethodRef(this, ret_type, call_conv, name, param, gen_param_count, logger, errors);
         }
 
         protected override IFieldRef CreateFieldRef(BaseTypeRef ret_type, string name)
@@ -115,7 +116,7 @@ namespace Mono.ILASM
             }
             else
             {
-                ext_typeref = new ExternTypeRef(this, logger, first, is_valuetype);
+                ext_typeref = new ExternTypeRef(this, logger, first, is_valuetype, errors);
                 nestedtypes_table[first] = ext_typeref;
             }
 

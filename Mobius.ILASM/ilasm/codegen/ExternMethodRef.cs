@@ -12,6 +12,7 @@ using Mobius.ILasm.infrastructure;
 using Mobius.ILasm.interfaces;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 
 namespace Mono.ILASM
 {
@@ -19,8 +20,8 @@ namespace Mono.ILASM
     public class ExternMethodRef : BaseMethodRef
     {
         public ExternMethodRef(ExternTypeRef owner, BaseTypeRef ret_type,
-                PEAPI.CallConv call_conv, string name, BaseTypeRef[] param, int gen_param_count, ILogger logger)
-                : base(owner, call_conv, ret_type, name, param, gen_param_count, logger)
+                PEAPI.CallConv call_conv, string name, BaseTypeRef[] param, int gen_param_count, ILogger logger, Dictionary<string, string> errors)
+                : base(owner, call_conv, ret_type, name, param, gen_param_count, logger, errors)
         {
         }
 
@@ -111,7 +112,7 @@ namespace Mono.ILASM
             if (owner.IsArray)
             {
                 logger.Error("Vararg methods on arrays are not supported yet.");
-                FileProcessor.ErrorCount += 1;
+                errors[nameof(ExternMethodRef)] = "Vararg methods on arrays are not supported yet.";
             }
 
             owner.Resolve(code_gen);

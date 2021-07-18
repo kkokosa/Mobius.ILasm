@@ -12,6 +12,8 @@ using Mobius.ILasm.infrastructure;
 using Mobius.ILasm.interfaces;
 using System;
 using System.Collections;
+using System.Collections.Generic;
+using PEAPI;
 
 namespace Mono.ILASM
 {
@@ -32,14 +34,16 @@ namespace Mono.ILASM
         private ArrayList other_list;
         private PEAPI.Constant init_value;
         private ILogger logger;
+        private Dictionary<string, string> errors;
 
-        public PropertyDef(FeatureAttr attr, BaseTypeRef type, string name, ArrayList arg_list, ILogger logger)
+        public PropertyDef(FeatureAttr attr, BaseTypeRef type, string name, ArrayList arg_list, ILogger logger, Dictionary<string, string> errors)
         {
             this.attr = attr;
             this.name = name;
             this.type = type;
             this.arg_list = arg_list;
             this.logger = logger;
+            this.errors = errors;
             is_resolved = false;
         }
 
@@ -92,7 +96,7 @@ namespace Mono.ILASM
             if (methoddef == null)
             {
                 logger.Error(type + " method of property " + name + " not found");
-                FileProcessor.ErrorCount += 1;
+                errors[nameof(PropertyDef)] = $"{type} method of property {name} not found";
             }
             return methoddef;
         }

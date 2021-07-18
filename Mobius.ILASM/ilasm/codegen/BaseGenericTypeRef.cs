@@ -11,14 +11,15 @@ using Mobius.ILasm.infrastructure;
 using Mobius.ILasm.interfaces;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 
 namespace Mono.ILASM
 {
 
     public abstract class BaseGenericTypeRef : BaseClassRef
     {
-        public BaseGenericTypeRef(ILogger logger, string full_name, bool is_valuetype, ArrayList conv_list, string sig_mod)
-                : base(full_name, is_valuetype, conv_list, sig_mod, logger)
+        public BaseGenericTypeRef(ILogger logger, string full_name, bool is_valuetype, ArrayList conv_list, string sig_mod, Dictionary<string, string> errors)
+                : base(full_name, is_valuetype, conv_list, sig_mod, logger, errors)
         {
             this.logger = logger;
         }
@@ -32,15 +33,15 @@ namespace Mono.ILASM
 
         public override GenericTypeInst GetGenericTypeInst(GenericArguments gen_args)
         {
-            logger.Error("Invalid attempt to create '" + FullName + "''" + gen_args.ToString() + "'");
-            FileProcessor.ErrorCount += 1;
+            logger.Error("Invalid attempt to create '" + FullName + "''" + gen_args + "'");
+            errors[nameof(BaseGenericTypeRef)] = $"Invalid attempt to create '{FullName}' '{gen_args}'";
             return null;
         }
 
         public override PEAPI.Type ResolveInstance(CodeGen code_gen, GenericArguments gen_args)
         {
-            logger.Error("Invalid attempt to create '" + FullName + "''" + gen_args.ToString() + "'");
-            FileProcessor.ErrorCount += 1;
+            logger.Error("Invalid attempt to create '" + FullName + "''" + gen_args+ "'");
+            errors[nameof(BaseGenericTypeRef)] = $"Invalid attempt to create '{FullName}' '{gen_args}'";
             return null;
         }
     }

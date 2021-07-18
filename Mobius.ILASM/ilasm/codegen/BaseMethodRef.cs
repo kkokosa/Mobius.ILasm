@@ -11,6 +11,8 @@
 using Mobius.ILasm.interfaces;
 using System;
 using System.Collections;
+using System.Collections.Generic;
+using System.ComponentModel;
 
 namespace Mono.ILASM
 {
@@ -29,9 +31,10 @@ namespace Mono.ILASM
 
         protected Hashtable gen_method_table;
         protected ILogger logger;
+        protected Dictionary<string, string> errors;
 
         public BaseMethodRef(BaseTypeRef owner, PEAPI.CallConv call_conv,
-                BaseTypeRef ret_type, string name, BaseTypeRef[] param, int gen_param_count, ILogger logger)
+                BaseTypeRef ret_type, string name, BaseTypeRef[] param, int gen_param_count, ILogger logger, Dictionary<string, string> errors)
         {
             this.owner = owner;
             this.call_conv = call_conv;
@@ -43,6 +46,7 @@ namespace Mono.ILASM
                 CallConv |= PEAPI.CallConv.Generic;
             is_resolved = false;
             this.logger = logger;
+            this.errors = errors;
         }
 
         public virtual PEAPI.Method PeapiMethod
@@ -74,7 +78,7 @@ namespace Mono.ILASM
 
             if (methref == null)
             {
-                methref = new GenericMethodRef(this, GenericMethodSig.GetInstance(gen_args), logger);
+                methref = new GenericMethodRef(this, GenericMethodSig.GetInstance(gen_args), logger, errors);
                 gen_method_table[gen_args.ToString()] = methref;
             }
 

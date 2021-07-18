@@ -10,6 +10,7 @@
 
 using Mobius.ILasm.interfaces;
 using System;
+using System.Collections.Generic;
 
 
 namespace Mono.ILASM
@@ -20,8 +21,8 @@ namespace Mono.ILASM
 
         public TypeSpecMethodRef(BaseTypeRef owner,
                         PEAPI.CallConv call_conv, BaseTypeRef ret_type,
-                        string name, BaseTypeRef[] param, int gen_param_count, ILogger logger)
-                : base(owner, call_conv, ret_type, name, param, gen_param_count, logger)
+                        string name, BaseTypeRef[] param, int gen_param_count, ILogger logger, Dictionary<string, string> errors)
+                : base(owner, call_conv, ret_type, name, param, gen_param_count, logger, errors)
         {
         }
 

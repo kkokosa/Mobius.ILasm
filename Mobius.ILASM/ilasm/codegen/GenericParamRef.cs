@@ -13,6 +13,7 @@
 using Mobius.ILasm.interfaces;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 
 namespace Mono.ILASM
 {
@@ -26,14 +27,14 @@ namespace Mono.ILASM
         private bool is_added; /* Added to TypeSpec table ? */
         private static Hashtable param_table = new Hashtable();
 
-        public GenericParamRef(PEAPI.GenParam gen_param, ILogger logger, string full_name)
-                : this(gen_param, logger, full_name, null)
+        public GenericParamRef(PEAPI.GenParam gen_param, ILogger logger, string full_name, Dictionary<string, string> errors)
+                : this(gen_param, logger, full_name, null, errors)
         {
 
         }
 
-        public GenericParamRef(PEAPI.GenParam gen_param, ILogger logger, string full_name, ArrayList conv_list)
-                : base(logger, full_name, false, conv_list, "")
+        public GenericParamRef(PEAPI.GenParam gen_param, ILogger logger, string full_name, ArrayList conv_list, Dictionary<string, string> errors)
+                : base(logger, full_name, false, conv_list, "", errors)
         {
             this.type = gen_param;
             this.param = gen_param;
@@ -56,7 +57,7 @@ namespace Mono.ILASM
 
         public override BaseTypeRef Clone()
         {
-            return new GenericParamRef(param, logger, full_name, (ArrayList)ConversionList.Clone());
+            return new GenericParamRef(param, logger, full_name, (ArrayList)ConversionList.Clone(), errors);
         }
 
         public override void ResolveNoTypeSpec(CodeGen code_gen)
@@ -113,7 +114,7 @@ namespace Mono.ILASM
         protected override BaseMethodRef CreateMethodRef(BaseTypeRef ret_type, PEAPI.CallConv call_conv,
                         string name, BaseTypeRef[] param, int gen_param_count)
         {
-            return new TypeSpecMethodRef(this, call_conv, ret_type, name, param, gen_param_count, logger);
+            return new TypeSpecMethodRef(this, call_conv, ret_type, name, param, gen_param_count, logger, errors);
         }
 
         protected override IFieldRef CreateFieldRef(BaseTypeRef ret_type, string name)

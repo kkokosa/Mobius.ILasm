@@ -12,6 +12,7 @@ using Mobius.ILasm.infrastructure;
 using Mobius.ILasm.interfaces;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 
 namespace Mono.ILASM
 {
@@ -24,13 +25,13 @@ namespace Mono.ILASM
 
         private static Hashtable s_method_table = new Hashtable();
 
-        public PrimitiveTypeRef(PEAPI.PrimitiveType type, string full_name, ILogger logger)
-                : this(type, full_name, null, String.Empty, logger)
+        public PrimitiveTypeRef(PEAPI.PrimitiveType type, string full_name, ILogger logger, Dictionary<string, string> errors)
+                : this(type, full_name, null, String.Empty, logger, errors)
         {
         }
 
-        public PrimitiveTypeRef(PEAPI.PrimitiveType type, string full_name, ArrayList conv_list, string sig_mod, ILogger logger)
-                : base(full_name, conv_list, sig_mod, logger)
+        public PrimitiveTypeRef(PEAPI.PrimitiveType type, string full_name, ArrayList conv_list, string sig_mod, ILogger logger, Dictionary<string, string> errors)
+                : base(full_name, conv_list, sig_mod, logger, errors)
         {
             this.type = type;
             if (SigMod == null)
@@ -40,7 +41,7 @@ namespace Mono.ILASM
         public override BaseTypeRef Clone()
         {
             return new PrimitiveTypeRef((PEAPI.PrimitiveType)type, full_name,
-                    (ArrayList)ConversionList.Clone(), sig_mod, logger);
+                    (ArrayList)ConversionList.Clone(), sig_mod, logger, errors);
         }
 
         public string Name
@@ -71,10 +72,10 @@ namespace Mono.ILASM
             {
                 case "System.String":
                 case "[System.Runtime]System.String":
-                    return new PrimitiveTypeRef(PEAPI.PrimitiveType.String, full_name, null);
+                    return new PrimitiveTypeRef(PEAPI.PrimitiveType.String, full_name, null, default);
                 case "[System.Runtime]System.Object":
                 case "System.Object":
-                    return new PrimitiveTypeRef(PEAPI.PrimitiveType.Object, full_name, null);
+                    return new PrimitiveTypeRef(PEAPI.PrimitiveType.Object, full_name, null, default);
                 default:
                     return null;
             }
@@ -96,7 +97,7 @@ namespace Mono.ILASM
                 return mr;
 
             //FIXME: generic methodref for primitive type?
-            mr = new TypeSpecMethodRef(this, call_conv, ret_type, name, param, gen_param_count, logger);
+            mr = new TypeSpecMethodRef(this, call_conv, ret_type, name, param, gen_param_count, logger, errors);
             s_method_table[key] = mr;
             return mr;
         }
@@ -104,7 +105,7 @@ namespace Mono.ILASM
         protected override IFieldRef CreateFieldRef(BaseTypeRef ret_type, string name)
         {
             logger.Error("PrimitiveType's can't have fields!");
-            FileProcessor.ErrorCount += 1;
+            errors[nameof(PrimitiveTypeRef)] = "PrimitiveTypes can't have fields!";
             return null;
         }
 

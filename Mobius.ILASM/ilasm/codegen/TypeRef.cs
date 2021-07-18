@@ -11,6 +11,7 @@ using Mobius.ILasm.infrastructure;
 using Mobius.ILasm.interfaces;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Diagnostics;
 
 namespace Mono.ILASM
@@ -23,32 +24,32 @@ namespace Mono.ILASM
     {
 
         private Location location;
-        public static readonly TypeRef Ellipsis = new TypeRef(null, "ELLIPSIS", false, null);
-        public static readonly TypeRef Any = new TypeRef(null, "any", false, null);
+        public static readonly TypeRef Ellipsis = new TypeRef(null, "ELLIPSIS", false, null, default);
+        public static readonly TypeRef Any = new TypeRef(null, "any", false, null, default);
 
-        public TypeRef(ILogger logger, string full_name, bool is_valuetype, Location location)
-                : this(logger, full_name, is_valuetype, location, null, null)
+        public TypeRef(ILogger logger, string full_name, bool is_valuetype, Location location, Dictionary<string, string> errors)
+                : this(logger, full_name, is_valuetype, location, null, null, errors)
         {
         }
 
-        public TypeRef(ILogger logger, string full_name, bool is_valuetype, Location location, ArrayList conv_list, string sig_mod)
-                : base(full_name, is_valuetype, conv_list, sig_mod, logger)
+        public TypeRef(ILogger logger, string full_name, bool is_valuetype, Location location, ArrayList conv_list, string sig_mod, Dictionary<string, string> errors)
+                : base(full_name, is_valuetype, conv_list, sig_mod, logger, errors)
         {
             this.location = location;
         }
 
         public override BaseTypeRef Clone()
         {
-            return new TypeRef(logger, full_name, is_valuetype, location, (ArrayList)ConversionList.Clone(), sig_mod);
+            return new TypeRef(logger, full_name, is_valuetype, location, (ArrayList)ConversionList.Clone(), sig_mod, errors);
         }
 
         protected override BaseMethodRef CreateMethodRef(BaseTypeRef ret_type,
                 PEAPI.CallConv call_conv, string name, BaseTypeRef[] param, int gen_param_count)
         {
             if (SigMod == null | SigMod == "")
-                return new MethodRef(this, call_conv, ret_type, name, param, gen_param_count, logger);
+                return new MethodRef(this, call_conv, ret_type, name, param, gen_param_count, logger, errors);
             else
-                return new TypeSpecMethodRef(this, call_conv, ret_type, name, param, gen_param_count, logger);
+                return new TypeSpecMethodRef(this, call_conv, ret_type, name, param, gen_param_count, logger, errors);
         }
 
         protected override IFieldRef CreateFieldRef(BaseTypeRef ret_type, string name)
@@ -69,7 +70,7 @@ namespace Mono.ILASM
             {
                 logger?.Error("Reference to undefined class '" +
                                        FullName + "'");
-                FileProcessor.ErrorCount += 1;
+                errors[nameof(TypeRef)] = $"Reference to undefined class {FullName}";
                 Debug.Assert(logger != null);
                 return;
             }

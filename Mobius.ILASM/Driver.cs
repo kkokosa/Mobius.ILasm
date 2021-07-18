@@ -24,9 +24,12 @@ namespace Mobius.ILasm.Core
             Exe
         }
 
+        public Dictionary<string, string> Errors { get; set; }
+
         public Driver(ILogger logger)
         {
-            this.logger = logger; ;
+            this.logger = logger;
+            Errors = new Dictionary<string, string>();
         }
 
         //public int Assemble(string[] args)
@@ -42,19 +45,19 @@ namespace Mobius.ILasm.Core
         //}
 
 
-        public int Assemble(string[] args, MemoryStream memoryStream)
+        public bool Assemble(string[] args, MemoryStream memoryStream)
         {
             System.Threading.Thread.CurrentThread.CurrentCulture = System.Globalization.CultureInfo.InvariantCulture;
 
             // TODO: improve error reporting:
             //  - return true/false
             //  - expose Errors property as a list (filename, errormessage)
-            DriverMain driver = new DriverMain(args, logger, memoryStream);
+            DriverMain driver = new DriverMain(args, logger, memoryStream, Errors);
             if (!driver.Run())
-                return 1;
+                return false;
             //Report.Message("Operation completed successfully");
             logger.Info("Operation completed successfully");
-            return 0;
+            return true;
         }
 
         public class DriverMain
@@ -75,15 +78,17 @@ namespace Mobius.ILasm.Core
             private string keyname;
             private readonly ILogger logger;
             private MemoryStream stream;
+            private Dictionary<string, string> errors;
 #if HAS_MONO_SECURITY
     			private StrongName sn;
 #endif
             bool noautoinherit;
 
-            public DriverMain(string[] args, ILogger logger, MemoryStream stream)
+            public DriverMain(string[] args, ILogger logger, MemoryStream stream, Dictionary<string, string> errors)
             {
                 this.logger = logger;
                 this.stream = stream;
+                this.errors = errors;
                 //can take a list of files to assemble
                 il_file_list = new ArrayList();
                 ParseArgs(args);
@@ -99,7 +104,7 @@ namespace Mobius.ILasm.Core
                 //    output_file = CreateOutputFilename();
                 try
                 {
-                    codegen = new CodeGen(logger, output_file, stream, target == Target.Dll, debugging_info, noautoinherit);
+                    codegen = new CodeGen(logger, output_file, stream, target == Target.Dll, debugging_info, noautoinherit, errors);
                     foreach (string file_path in il_file_list)
                     {
                         //The filepath needs to go as we will be using stream
@@ -110,13 +115,13 @@ namespace Mobius.ILasm.Core
                     if (scan_only)
                         return true;
 
-                    if (FileProcessor.ErrorCount > 0)
+                    if (errors.Any())
                         return false;
 
                     if (target != Target.Dll && !codegen.HasEntryPoint)
                     {
                         logger.Error("No entry point found.");
-                        FileProcessor.ErrorCount += 1;
+                        errors[nameof(DriverMain)] = "No entry point found.";
                     }
 
                     // if we have a key and aren't assembling a netmodule
@@ -224,7 +229,7 @@ namespace Mobius.ILasm.Core
                 }
 
 
-                ILParser parser = new ILParser(codegen, scanner, this.logger);
+                ILParser parser = new ILParser(codegen, scanner, this.logger, errors);
                 codegen.BeginSourceFile(file_path);
                 try
                 {

@@ -10,6 +10,7 @@
 using Mobius.ILasm.interfaces;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 
 namespace Mono.ILASM
 {
@@ -19,8 +20,8 @@ namespace Mono.ILASM
 
         PEAPI.Module module;
 
-        public Module(string name, ILogger logger)
-                : base(name, logger)
+        public Module(string name, ILogger logger, Dictionary<string, string> errors)
+                : base(name, logger, errors)
         {
         }
 

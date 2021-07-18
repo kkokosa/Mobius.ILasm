@@ -13,6 +13,7 @@
 using Mobius.ILasm.interfaces;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 
 namespace Mono.ILASM
 {
@@ -29,14 +30,14 @@ namespace Mono.ILASM
         private static Hashtable s_method_table = new Hashtable();
         private static Hashtable s_field_table = new Hashtable();
 
-        public GenericTypeInst(BaseClassRef class_ref, GenericArguments gen_args, ILogger logger, bool is_valuetypeinst)
-                : this(class_ref, gen_args, logger, is_valuetypeinst, null, null)
+        public GenericTypeInst(BaseClassRef class_ref, GenericArguments gen_args, ILogger logger, bool is_valuetypeinst, Dictionary<string, string> errors)
+                : this(class_ref, gen_args, logger, is_valuetypeinst, null, null, errors)
         {
         }
 
         public GenericTypeInst(BaseClassRef class_ref, GenericArguments gen_args, ILogger logger, bool is_valuetypeinst,
-                        string sig_mod, ArrayList conv_list)
-                : base(logger, "", is_valuetypeinst, conv_list, sig_mod)
+                        string sig_mod, ArrayList conv_list, Dictionary<string, string> errors)
+                : base(logger, "", is_valuetypeinst, conv_list, sig_mod, errors)
         {
             if (class_ref is GenericTypeInst)
                 throw new InternalErrorException("Cannot create nested GenericInst, '" +
@@ -57,7 +58,7 @@ namespace Mono.ILASM
             //Clone'd instance shares the class_ref and gen_args,
             //as its basically used to create modified types (arrays etc)
             return new GenericTypeInst(class_ref, gen_args, logger, is_valuetypeinst, sig_mod,
-                            (ArrayList)ConversionList.Clone());
+                            (ArrayList)ConversionList.Clone(), errors);
         }
 
         public override void MakeValueClass()
@@ -107,7 +108,7 @@ namespace Mono.ILASM
             TypeSpecMethodRef mr = s_method_table[key] as TypeSpecMethodRef;
             if (mr == null)
             {
-                mr = new TypeSpecMethodRef(this, call_conv, ret_type, meth_name, param, gen_param_count, logger);
+                mr = new TypeSpecMethodRef(this, call_conv, ret_type, meth_name, param, gen_param_count, logger, errors);
                 s_method_table[key] = mr;
             }
 

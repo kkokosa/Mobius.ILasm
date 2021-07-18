@@ -13,6 +13,7 @@ using PEAPI;
 using System;
 using System.IO;
 using System.Collections;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Text;
@@ -59,6 +60,7 @@ namespace Mono.ILASM
         private Hashtable typeref_table;
         private MemoryStream stream;
         private ArrayList defcont_list;
+        private Dictionary<string, string> errors;
 
         private int sub_system;
         private int cor_flags;
@@ -72,13 +74,14 @@ namespace Mono.ILASM
 
         private Module this_module;
 
-        public CodeGen(ILogger logger, string output_file, MemoryStream stream, bool is_dll, bool debugging_info, bool noautoinherit)
+        public CodeGen(ILogger logger, string output_file, MemoryStream stream, bool is_dll, bool debugging_info, bool noautoinherit, Dictionary<string, string> errors)
         {
             this.logger = logger;
             this.output_file = output_file;
             this.stream = stream;
             this.is_dll = is_dll;
             this.noautoinherit = noautoinherit;
+            this.errors = errors;
 
             if (debugging_info)
                 symwriter = new SymbolWriter(output_file);
@@ -168,7 +171,7 @@ namespace Mono.ILASM
                 if (entry_point)
                 {
                     logger.Error("Multiple .entrypoint declarations.");
-                    FileProcessor.ErrorCount += 1;
+                    errors[nameof(CodeGen)] = "Multiple .entrypoint declarations.";
                 }
                 entry_point = value;
             }
@@ -185,7 +188,7 @@ namespace Mono.ILASM
 
             if (tr == null)
             {
-                tr = new TypeRef(logger, name, false, null);
+                tr = new TypeRef(logger, name, false, null, errors);
                 typeref_table[name] = tr;
             }
 
@@ -206,7 +209,7 @@ namespace Mono.ILASM
 
             if (methref == null)
             {
-                methref = new GlobalMethodRef(ret_type, call_conv, name, param, gen_param_count, logger);
+                methref = new GlobalMethodRef(ret_type, call_conv, name, param, gen_param_count, logger, errors);
                 global_methodref_table[key] = methref;
             }
 
@@ -258,7 +261,7 @@ namespace Mono.ILASM
             if (this_assembly != null && this_assembly.Name != name)
             {
                 logger.Error("Multiple assembly declarations");
-                FileProcessor.ErrorCount += 1;
+                errors[nameof(CodeGen)] = "Multiple assembly declarations";
             }
             this_assembly = new Assembly(name);
             this_assembly.SetAssemblyAttr(attr);
@@ -268,7 +271,7 @@ namespace Mono.ILASM
 
         public void SetModuleName(string module_name)
         {
-            this_module = new Module(module_name, logger);
+            this_module = new Module(module_name, logger, errors);
             CurrentCustomAttrTarget = this_module;
         }
 
@@ -346,7 +349,7 @@ namespace Mono.ILASM
             }
 
             typedef = new TypeDef(attr, current_namespace,
-                            name, parent, impl_list, location, gen_params, outer, logger);
+                            name, parent, impl_list, location, gen_params, outer, logger, errors);
             typedef.NoAutoInherit = noautoinherit && parent == null;
             type_manager[cache_name] = typedef;
             current_customattrtarget = current_typedef = typedef;
@@ -385,7 +388,7 @@ namespace Mono.ILASM
             if (data_table[datadef.Name] != null)
             {
                 logger.Error("Duplicate global label '" + datadef.Name + "'");
-                FileProcessor.ErrorCount += 1;
+                errors[nameof(CodeGen)] = $"Duplicate global label '{datadef.Name}'";
             }
             data_table[datadef.Name] = datadef;
         }
@@ -499,7 +502,7 @@ namespace Mono.ILASM
             try
             {
                 if (ThisModule == null)
-                    this_module = new Module(Path.GetFileName(output_file), logger);
+                    this_module = new Module(Path.GetFileName(output_file), logger, errors);
 
                 //out_stream = new FileStream(output_file, FileMode.Create, FileAccess.Write);
                 
@@ -574,7 +577,7 @@ namespace Mono.ILASM
             if (methoddef == null)
             {
                 logger.Error("Unable to resolve global method : " + signature);
-                FileProcessor.ErrorCount += 1;
+                errors[nameof(CodeGen)] = $"Unable to resolve global method : {signature}";
             }
 
             return methoddef.Resolve(this);
@@ -587,7 +590,7 @@ namespace Mono.ILASM
             if (methoddef == null)
             {
                 logger.Error("Unable to resolve global method : " + sig_only_required_params);
-                FileProcessor.ErrorCount += 1;
+                errors[nameof(CodeGen)] = $"Unable to resolve global method : {sig_only_required_params}";
             }
 
             methoddef.Resolve(code_gen);
@@ -600,7 +603,7 @@ namespace Mono.ILASM
             if (fielddef == null)
             {
                 logger.Error(String.Format("Unable to resolve global field : {0} {1}", type_name, name));
-                FileProcessor.ErrorCount += 1;
+                errors[nameof(CodeGen)] = $"Unable to resolve global field : {type_name} {name}";
             }
             return fielddef.Resolve(this);
         }

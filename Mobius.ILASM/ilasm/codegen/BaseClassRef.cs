@@ -10,6 +10,7 @@
 using Mobius.ILasm.interfaces;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 
 namespace Mono.ILASM
 {
@@ -20,13 +21,13 @@ namespace Mono.ILASM
         protected Hashtable p_genericinst_table;
         protected bool is_valuetype;
 
-        protected BaseClassRef(string full_name, bool is_valuetype, ILogger logger)
-                : this(full_name, is_valuetype, null, null, logger)
+        protected BaseClassRef(string full_name, bool is_valuetype, ILogger logger, Dictionary<string, string> errors)
+                : this(full_name, is_valuetype, null, null, logger, errors)
         {
         }
 
-        protected BaseClassRef(string full_name, bool is_valuetype, ArrayList conv_list, string sig_mod, ILogger logger)
-                : base(full_name, conv_list, sig_mod, logger)
+        protected BaseClassRef(string full_name, bool is_valuetype, ArrayList conv_list, string sig_mod, ILogger logger, Dictionary<string, string> errors)
+                : base(full_name, conv_list, sig_mod, logger, errors)
         {
             this.is_valuetype = is_valuetype;
             p_genericinst_table = null;
@@ -44,7 +45,7 @@ namespace Mono.ILASM
 
         public virtual GenericTypeInst GetGenericTypeInst(GenericArguments gen_args)
         {
-            return new GenericTypeInst(this, gen_args, logger, is_valuetype);
+            return new GenericTypeInst(this, gen_args, logger, is_valuetype, errors);
         }
 
         public virtual PEAPI.Type ResolveInstance(CodeGen code_gen, GenericArguments gen_args)

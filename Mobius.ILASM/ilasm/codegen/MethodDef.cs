@@ -11,6 +11,7 @@
 using System;
 using System.Text;
 using System.Collections;
+using System.Collections.Generic;
 using System.Security;
 
 using Mono.CompilerServices.SymbolWriter;
@@ -57,11 +58,12 @@ namespace Mono.ILASM
         private Location start;
         private CodeGen codegen;
         private ILogger logger;
+        private Dictionary<string, string> errors;
 
         public MethodDef(CodeGen codegen, PEAPI.MethAttr meth_attr,
           PEAPI.CallConv call_conv, PEAPI.ImplAttr impl_attr,
           string name, BaseTypeRef ret_type, ArrayList param_list,
-          Location start, GenericParameters gen_params, TypeDef type_def, ILogger logger)
+          Location start, GenericParameters gen_params, TypeDef type_def, ILogger logger, Dictionary<string, string> errors)
         {
             this.codegen = codegen;
             this.meth_attr = meth_attr;
@@ -74,6 +76,7 @@ namespace Mono.ILASM
             this.ret_param = new ParamDef(PEAPI.ParamAttr.Default, "", ret_type);
             this.start = (Location)start.Clone();
             this.logger = logger;
+            this.errors = errors;
 
             inst_list = new ArrayList();
             label_table = new Hashtable();
@@ -364,7 +367,7 @@ namespace Mono.ILASM
             if (!IsStatic)
             {
                 logger.Error("Non-static method as entrypoint.");
-                FileProcessor.ErrorCount += 1;
+                errors[nameof(MethodDef)] = "Non-static method as entrypoint.";
             }
             entry_point = true;
         }
@@ -394,7 +397,7 @@ namespace Mono.ILASM
                 logger.Error(String.Format("Invalid {0}type parameter '{1}'",
                             (gpar.Type == PEAPI.GenParamType.MVar ? "method " : ""),
                              gpar.Name));
-                FileProcessor.ErrorCount += 1;
+                errors[nameof(MethodDef)] = $"Invalid {(gpar.Type == PEAPI.GenParamType.MVar ? "method " : "")} type parameter '{gpar.Name}'";
             }
         }
 
@@ -568,12 +571,12 @@ namespace Mono.ILASM
                     {
                         logger.Error(start, String.Format("Abstract method '{0}' in non-abstract class '{1}'",
                                                 Name, type_def.FullName));
-                        FileProcessor.ErrorCount += 1;
+                        errors[nameof(MethodDef)] = $"Abstract method '{Name}' in non-abstract class '{type_def.FullName}'";
                     }
                     if (inst_list.Count > 0)
                     {
                         logger.Error(start, "Method cannot have body if it is abstract.");
-                        FileProcessor.ErrorCount += 1;
+                        errors[nameof(MethodDef)] = "Method cannot have body if it is abstract.";
                     }
                     return;
                 }
@@ -584,13 +587,13 @@ namespace Mono.ILASM
 
             if (local_list.Count > 0)
             {
-                int ec = FileProcessor.ErrorCount;
+                int ec = errors.Count;
                 PEAPI.Local[] local_array = new PEAPI.Local[local_list.Count];
 
                 foreach (Local local in local_list)
                     local_array[local.Slot] = local.GetPeapiLocal(code_gen);
 
-                if (FileProcessor.ErrorCount > ec)
+                if (errors.Count > ec)
                     return;
 
                 if (zero_init)
@@ -618,7 +621,8 @@ namespace Mono.ILASM
                 {
                     logger.Error(start, String.Format("Method cannot have body if it is non-IL runtime-supplied, '{0}'",
                                             FullName));
-                    FileProcessor.ErrorCount += 1;
+                    errors[nameof(MethodDef)] =
+                        $"Method cannot have body if it is non-IL runtime-supplied, '{FullName}'";
                 }
             }
             else
@@ -628,7 +632,8 @@ namespace Mono.ILASM
                 {
                     logger.Error(start, String.Format("Cannot compile native/unmanaged method, '{0}'",
                                             FullName));
-                    FileProcessor.ErrorCount += 1;
+                    errors[nameof(MethodDef)] =
+                        $"Cannot compile native/unmanaged method, '{FullName}'";
                 }
             }
 
@@ -639,14 +644,16 @@ namespace Mono.ILASM
                 {
                     logger.Error(start, String.Format("Method cannot have body if it is an internal call, '{0}'",
                                             FullName));
-                    FileProcessor.ErrorCount += 1;
+                    errors[nameof(MethodDef)] =
+                        $"Method cannot have body if it is an internal call, '{FullName}'";
                 }
 
                 if (pinvoke_info)
                 {
                     logger.Error(start, String.Format("Method cannot have body if it is pinvoke, '{0}'",
                                             FullName));
-                    FileProcessor.ErrorCount += 1;
+                    errors[nameof(MethodDef)] =
+                        $"Method cannot have body if it is pinvoke, '{FullName}'";
                 }
             }
             else
@@ -695,7 +702,7 @@ namespace Mono.ILASM
                 if (def == null)
                 {
                     logger.Error("Undefined Label:  " + label);
-                    FileProcessor.ErrorCount += 1;
+                    errors[nameof(MethodDef)] = $"Undefined Label: {label}";
                     return;
                 }
                 label.Label = def.Label;
@@ -737,7 +744,7 @@ namespace Mono.ILASM
             if (label_info != null)
             {
                 logger.Error("Duplicate label '" + name + "'");
-                FileProcessor.ErrorCount += 1;
+                errors[nameof(MethodDef)] = $"Duplicate label '{name}'";
             }
 
             label_info = new LabelInfo(name, inst_list.Count);

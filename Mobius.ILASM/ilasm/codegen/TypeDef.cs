@@ -12,6 +12,7 @@ using Mobius.ILasm.infrastructure;
 using Mobius.ILasm.interfaces;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Security;
 
 namespace Mono.ILASM
@@ -43,6 +44,7 @@ namespace Mono.ILASM
 
         private EventDef current_event;
         private PropertyDef current_property;
+        private Dictionary<string, string> errors;
         private ILogger logger;
 
         private int size;
@@ -54,7 +56,7 @@ namespace Mono.ILASM
         private Location location;
 
         public TypeDef(PEAPI.TypeAttr attr, string name_space, string name,
-                        BaseClassRef parent, ArrayList impl_list, Location location, GenericParameters gen_params, TypeDef outer, ILogger logger)
+                        BaseClassRef parent, ArrayList impl_list, Location location, GenericParameters gen_params, TypeDef outer, ILogger logger, Dictionary<string, string> errors)
         {
             this.attr = attr;
             this.parent = parent;
@@ -63,6 +65,7 @@ namespace Mono.ILASM
             this.outer = outer;
             this.location = location;
             this.logger = logger;
+            this.errors = errors;
 
             field_table = new Hashtable();
             field_list = new ArrayList();
@@ -227,7 +230,7 @@ namespace Mono.ILASM
             if (field_table[entry] != null)
             {
                 logger.Error("Duplicate field declaration: " + fielddef.Type.FullName + " " + fielddef.Name);
-                FileProcessor.ErrorCount += 1;
+                errors[nameof(TypeDef)] = $"Duplicate field declaration: {fielddef.Type.FullName} {fielddef.Name}";
             }
             field_table.Add(entry, fielddef);
             field_list.Add(fielddef);
@@ -238,7 +241,7 @@ namespace Mono.ILASM
             if (method_table[methoddef.Signature] != null)
             {
                 logger.Error(methoddef.StartLocation, "Duplicate method declaration: " + methoddef.Signature);
-                FileProcessor.ErrorCount += 1;
+                errors[nameof(TypeDef)] = $"Duplicate method declaration: {methoddef.Signature}";
             }
 
             method_table.Add(methoddef.Signature, methoddef);
@@ -250,7 +253,7 @@ namespace Mono.ILASM
             if (current_event != null)
             {
                 logger.Error("An event definition was not closed.");
-                FileProcessor.ErrorCount += 1;
+                errors[nameof(TypeDef)] = "An event definition was not closed.";
             }
 
             current_event = event_def;
@@ -270,7 +273,7 @@ namespace Mono.ILASM
             if (current_property != null)
             {
                 logger.Error("A property definition was not closed.");
-                FileProcessor.ErrorCount += 1;
+                errors[nameof(TypeDef)] = "A property definition was not closed.";
             }
 
             current_property = property_def;
@@ -359,7 +362,7 @@ namespace Mono.ILASM
             {
                 // Circular definition
                 logger.Error("Circular definition of class: " + FullName);
-                FileProcessor.ErrorCount += 1;
+                errors[nameof(TypeDef)] = $"Circular definition of class: {FullName}";
             }
 
             if (outer != null)
@@ -385,7 +388,7 @@ namespace Mono.ILASM
                 {
                     logger.Error("this type can not be a base type: "
                                     + parent);
-                    FileProcessor.ErrorCount += 1;
+                    errors[nameof(TypeDef)] = $"this type can not be a base type: {parent}";
                 }
 
                 if (IsValueType(parent.PeapiClass.nameSpace, parent.PeapiClass.name))

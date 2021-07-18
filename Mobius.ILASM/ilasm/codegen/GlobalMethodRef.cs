@@ -11,6 +11,7 @@
 using Mobius.ILasm.interfaces;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 
 namespace Mono.ILASM
 {
@@ -18,8 +19,8 @@ namespace Mono.ILASM
     public class GlobalMethodRef : BaseMethodRef
     {
         public GlobalMethodRef(BaseTypeRef ret_type, PEAPI.CallConv call_conv,
-                        string name, BaseTypeRef[] param, int gen_param_count, ILogger logger)
-                : base(null, call_conv, ret_type, name, param, gen_param_count, logger)
+                        string name, BaseTypeRef[] param, int gen_param_count, ILogger logger, Dictionary<string, string> errors)
+                : base(null, call_conv, ret_type, name, param, gen_param_count, logger, errors)
         {
         }
 

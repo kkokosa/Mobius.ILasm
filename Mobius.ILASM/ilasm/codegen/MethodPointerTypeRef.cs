@@ -11,6 +11,7 @@
 using System;
 using System.Text;
 using System.Collections;
+using System.Collections.Generic;
 using Mobius.ILasm.interfaces;
 
 namespace Mono.ILASM
@@ -23,13 +24,13 @@ namespace Mono.ILASM
         private BaseTypeRef ret;
         private ArrayList param_list;
 
-        public MethodPointerTypeRef(PEAPI.CallConv callconv, BaseTypeRef ret, ArrayList param_list, ILogger logger)
-                : this(callconv, ret, param_list, null, String.Empty, logger)
+        public MethodPointerTypeRef(PEAPI.CallConv callconv, BaseTypeRef ret, ArrayList param_list, ILogger logger, Dictionary<string, string> errors)
+                : this(callconv, ret, param_list, null, String.Empty, logger, errors)
         {
         }
 
-        public MethodPointerTypeRef(PEAPI.CallConv callconv, BaseTypeRef ret, ArrayList param_list, ArrayList conv_list, string sig_mod, ILogger logger)
-                : base(String.Empty, conv_list, sig_mod, logger)
+        public MethodPointerTypeRef(PEAPI.CallConv callconv, BaseTypeRef ret, ArrayList param_list, ArrayList conv_list, string sig_mod, ILogger logger, Dictionary<string, string> errors)
+                : base(String.Empty, conv_list, sig_mod, logger, errors)
         {
             this.callconv = callconv;
             this.ret = ret;
@@ -70,7 +71,7 @@ namespace Mono.ILASM
         {
             return new MethodPointerTypeRef(callconv, ret,
                             param_list == null ? null : (ArrayList)param_list.Clone(),
-                            (ArrayList)ConversionList.Clone(), sig_mod, logger);
+                            (ArrayList)ConversionList.Clone(), sig_mod, logger, errors);
         }
 
         public override void Resolve(CodeGen code_gen)
@@ -131,7 +132,7 @@ namespace Mono.ILASM
         protected override BaseMethodRef CreateMethodRef(BaseTypeRef ret_type, PEAPI.CallConv call_conv,
                         string name, BaseTypeRef[] param, int gen_param_count)
         {
-            return new TypeSpecMethodRef(this, call_conv, ret_type, name, param, gen_param_count, logger);
+            return new TypeSpecMethodRef(this, call_conv, ret_type, name, param, gen_param_count, logger, errors);
         }
 
         protected override IFieldRef CreateFieldRef(BaseTypeRef ret_type, string name)

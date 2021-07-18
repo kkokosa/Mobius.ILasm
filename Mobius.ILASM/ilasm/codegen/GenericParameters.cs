@@ -11,6 +11,7 @@ using Mobius.ILasm.infrastructure;
 using Mobius.ILasm.interfaces;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Text;
 
 namespace Mono.ILASM
@@ -131,12 +132,14 @@ namespace Mono.ILASM
         ArrayList param_list;
         string param_str;
         ILogger logger;
+        private Dictionary<string, string> errors;
 
-        public GenericParameters(ILogger logger)
+        public GenericParameters(ILogger logger, Dictionary<string, string> errors)
         {
             param_list = null;
             param_str = null;
             this.logger = logger;
+            this.errors = errors;
         }
 
         public int Count
@@ -167,7 +170,7 @@ namespace Mono.ILASM
             if (param_list == null)
             {
                 logger.Error("Invalid type parameter '" + id + "'");
-                FileProcessor.ErrorCount += 1;
+                errors[nameof(GenericParameters)] = $"Invalid type parameter '{id}'";
             }
 
             foreach (GenericParameter param in param_list)

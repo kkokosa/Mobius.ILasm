@@ -10,6 +10,7 @@
 using Mobius.ILasm.interfaces;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 
 namespace Mono.ILASM
 {
@@ -23,17 +24,20 @@ namespace Mono.ILASM
         protected Hashtable method_table;
         protected Hashtable field_table;
         protected ILogger logger;
+        protected Dictionary<string, string> errors;
 
-        protected BaseTypeRef(string full_name, ILogger logger)
-                : this(full_name, null, null, logger)
+        protected BaseTypeRef(string full_name, ILogger logger, Dictionary<string, string> errors)
+                : this(full_name, null, null, logger, errors)
         {
         }
 
-        protected BaseTypeRef(string full_name, ArrayList conv_list, string sig_mod, ILogger logger)
+        protected BaseTypeRef(string full_name, ArrayList conv_list, string sig_mod, ILogger logger, Dictionary<string, string> errors)
         {
             this.logger = logger;
             this.full_name = full_name;
             this.sig_mod = sig_mod;
+            this.errors = errors;
+
             is_resolved = false;
             if (conv_list != null)
                 ConversionList = conv_list;
