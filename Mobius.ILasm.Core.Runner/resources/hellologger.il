@@ -64,7 +64,7 @@
         call instance void [mscorlib]System.Object::.ctor()
         ldarg.0
         ldarg.1
-        stfld int32 Logger::_level
+        stfld int32 ConsoleApp.Logger::_level
         ret
     } // end of method Logger::.ctor
 
