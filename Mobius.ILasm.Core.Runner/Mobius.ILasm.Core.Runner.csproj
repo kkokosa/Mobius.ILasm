@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <PackageReference Include="NLog" Version="4.7.9" />
+    <PackageReference Include="PowerArgs" Version="3.6.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -16,6 +17,9 @@
 
   <ItemGroup>
     <None Update="NLog.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="resources\hellologger.il">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="resources\helloworldconsole.il">

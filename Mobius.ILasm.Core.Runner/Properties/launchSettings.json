@@ -2,7 +2,7 @@
   "profiles": {
     "Mobius.ILasm.Core.Runner": {
       "commandName": "Project",
-      "commandLineArgs": "C:\\github\\vms\\Mobius.ILasm\\Mobius.ILasm.Core.BenchmarkDotNet\\Resources\\helloworldconsole.il"
+      "commandLineArgs": "-I .\\resources\\hellologger.il"
     }
   }
 }
