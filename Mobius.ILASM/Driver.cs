@@ -17,145 +17,121 @@ namespace Mobius.ILasm.Core
     //and instead being changed to either the logger or FileProcessor.
     public class Driver
     {
-        private readonly ILogger logger;
-        enum Target
+        public enum Target
         {
             Dll,
             Exe
         }
 
-        public Dictionary<string, string> Errors { get; set; }
+        private Target target = Target.Exe;
 
-        public Driver(ILogger logger)
+        private bool show_tokens = false;
+
+        // private bool show_method_def = false;
+        // private bool show_method_ref = false;
+        private bool show_parser = false;
+        private bool scan_only = false;
+        private bool debugging_info = false;
+        private bool keycontainer = false;
+        private string keyname;
+
+        private CodeGen codegen;
+        private readonly ILogger logger;
+        private Dictionary<string, string> errors;
+#if HAS_MONO_SECURITY
+    			private StrongName sn;
+#endif
+        bool noautoinherit;
+
+        public Driver(ILogger logger, Target target, bool showParser, bool debuggingInfo, bool showTokens)
         {
             this.logger = logger;
-            Errors = new Dictionary<string, string>();
+            this.errors = new Dictionary<string, string>();
+            this.target = target;
+            this.show_parser = showParser;
+            this.debugging_info = debuggingInfo;
+            this.show_tokens = showTokens;
         }
 
-        //public int Assemble(string[] args)
-        //{
-        //    System.Threading.Thread.CurrentThread.CurrentCulture = System.Globalization.CultureInfo.InvariantCulture;
-
-        //    DriverMain driver = new DriverMain(args, logger);
-        //    if (!driver.Run())
-        //        return 1;
-        //    //Report.Message("Operation completed successfully");
-        //    logger.Info("Operation completed successfully");
-        //    return 0;
-        //}
-
-
-        public bool Assemble(string[] args, MemoryStream memoryStream)
+        public bool Assemble(string[] inputs, MemoryStream outputStream)
         {
             System.Threading.Thread.CurrentThread.CurrentCulture = System.Globalization.CultureInfo.InvariantCulture;
 
             // TODO: improve error reporting:
             //  - return true/false
             //  - expose Errors property as a list (filename, errormessage)
-            DriverMain driver = new DriverMain(args, logger, memoryStream, Errors);
-            if (!driver.Run())
+            if (!Run(inputs, outputStream))
                 return false;
             //Report.Message("Operation completed successfully");
             logger.Info("Operation completed successfully");
             return true;
         }
 
-        public class DriverMain
+        public bool Run(string[] inputs, MemoryStream outputStream)
         {
-
-            private ArrayList il_file_list;
-            private string output_file;
-            private Target target = Target.Exe;
-            private string target_string = "exe";
-            private bool show_tokens = false;
-            //                        private bool show_method_def = false;
-            //                        private bool show_method_ref = false;
-            private bool show_parser = false;
-            private bool scan_only = false;
-            private bool debugging_info = false;
-            private CodeGen codegen;
-            private bool keycontainer = false;
-            private string keyname;
-            private readonly ILogger logger;
-            private MemoryStream stream;
-            private Dictionary<string, string> errors;
-#if HAS_MONO_SECURITY
-    			private StrongName sn;
-#endif
-            bool noautoinherit;
-
-            public DriverMain(string[] args, ILogger logger, MemoryStream stream, Dictionary<string, string> errors)
+            //Call the assembler without any arguments, results in console output of it's usage information
+            //if (il_file_list.Count == 0)
+            //    Usage();
+            //TODO needs to go as we will be using a Stream instead of a FileStream going forward.
+            //if (output_file == null)
+            //    output_file = CreateOutputFilename();
+            try
             {
-                this.logger = logger;
-                this.stream = stream;
-                this.errors = errors;
-                //can take a list of files to assemble
-                il_file_list = new ArrayList();
-                ParseArgs(args);
-            }
-
-            public bool Run()
-            {
-                //Call the assembler without any arguments, results in console output of it's usage information
-                if (il_file_list.Count == 0)
-                    Usage();
-                //TODO needs to go as we will be using a Stream instead of a FileStream going forward.
-                //if (output_file == null)
-                //    output_file = CreateOutputFilename();
-                try
+                codegen = new CodeGen(logger, "", outputStream, target == Target.Dll, debugging_info, noautoinherit,
+                    errors);
+                foreach (string input in inputs)
                 {
-                    codegen = new CodeGen(logger, output_file, stream, target == Target.Dll, debugging_info, noautoinherit, errors);
-                    foreach (string file_path in il_file_list)
-                    {
-                        //The filepath needs to go as we will be using stream
-                        //but we need a mechanism to keep information about every stream
-                        FileProcessor.FilePath = file_path;
-                        ProcessFile(file_path, stream);
-                    }
-                    if (scan_only)
-                        return true;
+                    //TODO: The filepath needs to go as we will be using stream
+                    //but we need a mechanism to keep information about every stream
+                    // FileProcessor.FilePath = file_path;
+                    Process(input, outputStream);
+                }
 
-                    if (errors.Any())
-                        return false;
+                if (scan_only)
+                    return true;
 
-                    if (target != Target.Dll && !codegen.HasEntryPoint)
-                    {
-                        logger.Error("No entry point found.");
-                        errors[nameof(DriverMain)] = "No entry point found.";
-                    }
+                if (errors.Any())
+                    return false;
 
-                    // if we have a key and aren't assembling a netmodule
-                    if ((keyname != null) && !codegen.IsThisAssembly(null))
-                    {
+                if (target != Target.Dll && !codegen.HasEntryPoint)
+                {
+                    logger.Error("No entry point found.");
+                    errors[nameof(Driver)] = "No entry point found.";
+                }
+
+                // if we have a key and aren't assembling a netmodule
+                if ((keyname != null) && !codegen.IsThisAssembly(null))
+                {
 #if HAS_MONO_SECURITY
     						LoadKey ();
     						// this overrides any attribute or .publickey directive in the source
     						codegen.ThisAssembly.SetPublicKey (sn.PublicKey);
 #else
-                        throw new NotSupportedException();
+                    throw new NotSupportedException();
 #endif
-                    }
+                }
 
-                    try
-                    {
-                        codegen.Write();
-                    }
-                    catch
-                    {
-                        File.Delete(output_file);
-                        throw;
-                    }
-                }
-                catch (ILAsmException e)
+                try
                 {
-                    logger.Error(e.ToString());
-                    return false;
+                    codegen.Write();
                 }
-                catch (PEAPI.PEFileException pe)
+                catch
                 {
-                    logger.Error("Error : " + pe.Message);
-                    return false;
+                    //TODO: How and if we need to handle this?
+                    //File.Delete(output_file);
+                    throw;
                 }
+            }
+            catch (ILAsmException e)
+            {
+                logger.Error(e.ToString());
+                return false;
+            }
+            catch (PEAPI.PEFileException pe)
+            {
+                logger.Error("Error : " + pe.Message);
+                return false;
+            }
 
 #if HAS_MONO_SECURITY
                                     try {
@@ -168,8 +144,8 @@ namespace Mobius.ILasm.Core
                                     }
 #endif
 
-                return true;
-            }
+            return true;
+        }
 
 #if HAS_MONO_SECURITY
     			private void LoadKey ()
@@ -199,267 +175,113 @@ namespace Mobius.ILasm.Core
     			}
 #endif
 
-            private void ProcessFile(string file_path, MemoryStream stream)
+        private void Process(string text, MemoryStream stream)
+        {
+            if (stream == null)
             {
-                if (stream == null)
-                {
-                    logger.Error($"Stream is empty!");
-                    Environment.Exit(2);
-                }
-                //TODO figure out how to log with the correct IL input filename
-                //logger.Info($"Assembling '{file_path}' , {FileProcessor.GetListing(null)}, to {target_string} --> '{output_file}'");
-                StreamReader reader = File.OpenText(file_path);
-                ILTokenizer scanner = new ILTokenizer(reader);
+                logger.Error($"Stream is empty!");
+                Environment.Exit(2);
+            }
+            //TODO figure out how to log with the correct IL input filename
+            //logger.Info($"Assembling '{file_path}' , {FileProcessor.GetListing(null)}, to {target_string} --> '{output_file}'");
 
-                if (show_tokens)
-                    scanner.NewTokenEvent += new NewTokenEvent(ShowToken);
-                //if (show_method_def)
-                //        MethodTable.MethodDefinedEvent += new MethodDefinedEvent (ShowMethodDef);
-                //if (show_method_ref)
-                //       MethodTable.MethodReferencedEvent += new MethodReferencedEvent (ShowMethodRef);
+            byte[] byteArray = Encoding.ASCII.GetBytes(text);
+            MemoryStream inStream = new MemoryStream(byteArray);
+            StreamReader reader = new StreamReader(inStream);
+            ILTokenizer scanner = new ILTokenizer(reader);
+            if (show_tokens)
+                scanner.NewTokenEvent += new NewTokenEvent(ShowToken);
+            //if (show_method_def)
+            //        MethodTable.MethodDefinedEvent += new MethodDefinedEvent (ShowMethodDef);
+            //if (show_method_ref)
+            //       MethodTable.MethodReferencedEvent += new MethodReferencedEvent (ShowMethodRef);
 
-                if (scan_only)
+            if (scan_only)
+            {
+                ILToken tok;
+                while ((tok = scanner.NextToken) != ILToken.EOF)
                 {
-                    ILToken tok;
-                    while ((tok = scanner.NextToken) != ILToken.EOF)
-                    {
-                        logger.Info(tok.ToString());
-                    }
-                    return;
+                    logger.Info(tok.ToString());
                 }
 
-
-                ILParser parser = new ILParser(codegen, scanner, this.logger, errors);
-                codegen.BeginSourceFile(file_path);
-                try
-                {
-                    if (show_parser)
-                        parser.yyparse(new ScannerAdapter(scanner),
-                                        new Mono.ILASM.yydebug.yyDebugSimple());
-                    else
-                        parser.yyparse(new ScannerAdapter(scanner), null);
-                }
-                catch (ILTokenizingException ilte)
-                {
-                    logger.Error(ilte.Location, "syntax error at token '" + ilte.Token + "'");
-                }
-                catch (Mono.ILASM.yyParser.yyException ye)
-                {
-                    logger.Error(scanner.Reader.Location, ye.Message);
-                }
-                catch (ILAsmException ie)
-                {
-                    ie.FilePath = file_path;
-                    ie.Location = scanner.Reader.Location;
-                    throw;
-                }
-                catch (Exception)
-                {
-                    Console.Write("{0} ({1}, {2}): ", file_path, scanner.Reader.Location.line, scanner.Reader.Location.column);
-                    throw;
-                }
-                finally
-                {
-                    codegen.EndSourceFile();
-                }
+                return;
             }
 
-            public void ShowToken(object sender, NewTokenEventArgs args)
+            ILParser parser = new ILParser(codegen, scanner, this.logger, errors);
+            //codegen.BeginSourceFile(file_path);
+            try
             {
-                Console.WriteLine("token: '{0}'", args.Token);
-            }
-            /*
-            public void ShowMethodDef (object sender, MethodDefinedEventArgs args)
-            {
-                    Console.WriteLine ("***** Method defined *****");
-                    Console.WriteLine ("-- signature:   {0}", args.Signature);
-                    Console.WriteLine ("-- name:        {0}", args.Name);
-                    Console.WriteLine ("-- return type: {0}", args.ReturnType);
-                    Console.WriteLine ("-- is in table: {0}", args.IsInTable);
-                    Console.WriteLine ("-- method atts: {0}", args.MethodAttributes);
-                    Console.WriteLine ("-- impl atts:   {0}", args.ImplAttributes);
-                    Console.WriteLine ("-- call conv:   {0}", args.CallConv);
-            }
-
-            public void ShowMethodRef (object sender, MethodReferencedEventArgs args)
-            {
-                    Console.WriteLine ("***** Method referenced *****");
-                    Console.WriteLine ("-- signature:   {0}", args.Signature);
-                    Console.WriteLine ("-- name:        {0}", args.Name);
-                    Console.WriteLine ("-- return type: {0}", args.ReturnType);
-                    Console.WriteLine ("-- is in table: {0}", args.IsInTable);
-            }
-            */
-            private void ParseArgs(string[] args)
-            {
-                string command_arg;
-                //Processes a list of .il files to assemble as iterates over every string object in the input array
-                foreach (string str in args)
-                {
-                    //default case where only the path of the .il file is given.
-                    if ((str[0] != '-') && (str[0] != '/'))
-                    {
-                        il_file_list.Add(str);
-                        continue;
-                    }
-                    switch (GetCommand(str, out command_arg))
-                    {
-                        case "out":
-                        case "output":
-                            output_file = command_arg;
-                            break;
-                        case "exe":
-                            target = Target.Exe;
-                            target_string = "exe";
-                            break;
-                        case "dll":
-                            target = Target.Dll;
-                            target_string = "dll";
-                            break;
-                        //This option must be removed as earlier this was used to suppress any logging via the Report.cs
-                        //case "quiet":
-                        //    Report.Quiet = true;
-                        //    break;
-                        case "debug":
-                        case "deb":
-                            debugging_info = true;
-                            break;
-                        // Stubs to stay commandline compatible with MS 
-                        case "listing":
-                        case "nologo":
-                        case "clock":
-                        case "error":
-                        case "subsystem":
-                        case "flags":
-                        case "alignment":
-                        case "base":
-                        case "resource":
-                            break;
-                        case "key":
-                            if (command_arg.Length > 0)
-                                keycontainer = (command_arg[0] == '@');
-                            if (keycontainer)
-                                keyname = command_arg.Substring(1);
-                            else
-                                keyname = command_arg;
-                            break;
-                        case "noautoinherit":
-                            noautoinherit = true;
-                            break;
-                        case "scan_only":
-                            scan_only = true;
-                            break;
-                        case "show_tokens":
-                            show_tokens = true;
-                            break;
-                        case "show_method_def":
-                            //                                                show_method_def = true;
-                            break;
-                        case "show_method_ref":
-                            //                                                show_method_ref = true;
-                            break;
-                        case "show_parser":
-                            show_parser = true;
-                            break;
-                        case "-about":
-                            if (str[0] != '-')
-                                break;
-                            About();
-                            break;
-                        case "-version":
-                            if (str[0] != '-')
-                                break;
-                            Version();
-                            break;
-                        default:
-                            if (str[0] == '-')
-                                break;
-                            il_file_list.Add(str);
-                            break;
-                    }
-                }
-            }
-
-            private string GetCommand(string str, out string command_arg)
-            {
-                int end_index = str.IndexOfAny(new char[] { ':', '=' }, 1);
-                string command = str.Substring(1,
-                        end_index == -1 ? str.Length - 1 : end_index - 1);
-
-                if (end_index != -1)
-                {
-                    command_arg = str.Substring(end_index + 1);
-                }
+                if (show_parser)
+                    parser.yyparse(new ScannerAdapter(scanner),
+                        new Mono.ILASM.yydebug.yyDebugSimple());
                 else
-                {
-                    command_arg = null;
-                }
-
-                return command.ToLower();
+                    parser.yyparse(new ScannerAdapter(scanner), null);
             }
-
-            /// <summary>
-            ///   Get the first file name and makes it into an output file name
-            /// </summary>
-            private string CreateOutputFilename()
+            catch (ILTokenizingException ilte)
             {
-                string file_name = (string)il_file_list[0];
-                int ext_index = file_name.LastIndexOf('.');
-
-                if (ext_index == -1)
-                    ext_index = file_name.Length;
-
-                return String.Format("{0}.{1}", file_name.Substring(0, ext_index),
-                        target_string);
+                logger.Error(ilte.Location, "syntax error at token '" + ilte.Token + "'");
             }
-
-            private void Usage()
+            catch (Mono.ILASM.yyParser.yyException ye)
             {
-                Console.WriteLine("Mono IL assembler compiler\n" +
-                        "ilasm [options] source-files\n" +
-                        "   --about            About the Mono IL assembler compiler\n" +
-                        "   --version          Print the version number of the compiler\n" +
-                        "   /output:file_name  Specifies output file.\n" +
-                        "   /exe               Compile to executable.\n" +
-                        "   /dll               Compile to library.\n" +
-                        "   /debug             Include debug information.\n" +
-    "   /key:keyfile       Strongname using the specified key file\n" +
-    "   /key:@container    Strongname using the specified key container\n" +
-                        "   /noautoinherit     Disable inheriting from System.Object by default\n" +
-                        "Options can be of the form -option or /option\n");
-                Environment.Exit(1);
+                logger.Error(scanner.Reader.Location, ye.Message);
             }
-
-            private void About()
+            catch (ILAsmException ie)
             {
-                Console.WriteLine(
-                        "For more information on Mono, visit the project Web site\n" +
-                        "   http://www.mono-project.com\n\n");
-                Environment.Exit(0);
+                // ie.FilePath = file_path;
+                ie.Location = scanner.Reader.Location;
+                throw;
             }
-
-            private void Version()
+            catch (Exception)
             {
-                string version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
-                Console.WriteLine("Mono IL assembler compiler version {0}", version);
-                Environment.Exit(0);
+                // Console.Write("{0} ({1}, {2}): ", file_path, scanner.Reader.Location.line, scanner.Reader.Location.column);
+                Console.Write("{1}, {2}): ", scanner.Reader.Location.line, scanner.Reader.Location.column);
+                throw;
             }
-
-            private void AssembleFile(string file, string listing,
-                                  string target, string output)
+            finally
             {
-                logger.Info($"Assembling '{file}' , {GetListing(listing)}, to {target} --> '{output}'");
+                codegen.EndSourceFile();
             }
-
-            private static string GetListing(string listing)
-            {
-                if (listing == null)
-                    return "no listing file";
-                return listing;
-            }
-
         }
+
+        public void ShowToken(object sender, NewTokenEventArgs args)
+        {
+            Console.WriteLine("token: '{0}'", args.Token);
+        }
+        /*
+        public void ShowMethodDef (object sender, MethodDefinedEventArgs args)
+        {
+                Console.WriteLine ("***** Method defined *****");
+                Console.WriteLine ("-- signature:   {0}", args.Signature);
+                Console.WriteLine ("-- name:        {0}", args.Name);
+                Console.WriteLine ("-- return type: {0}", args.ReturnType);
+                Console.WriteLine ("-- is in table: {0}", args.IsInTable);
+                Console.WriteLine ("-- method atts: {0}", args.MethodAttributes);
+                Console.WriteLine ("-- impl atts:   {0}", args.ImplAttributes);
+                Console.WriteLine ("-- call conv:   {0}", args.CallConv);
+        }
+
+        public void ShowMethodRef (object sender, MethodReferencedEventArgs args)
+        {
+                Console.WriteLine ("***** Method referenced *****");
+                Console.WriteLine ("-- signature:   {0}", args.Signature);
+                Console.WriteLine ("-- name:        {0}", args.Name);
+                Console.WriteLine ("-- return type: {0}", args.ReturnType);
+                Console.WriteLine ("-- is in table: {0}", args.IsInTable);
+        }
+        */
+
+        private void AssembleFile(string file, string listing,
+            string target, string output)
+        {
+            logger.Info($"Assembling '{file}' , {GetListing(listing)}, to {target} --> '{output}'");
+        }
+
+        private static string GetListing(string listing)
+        {
+            if (listing == null)
+                return "no listing file";
+            return listing;
+        }
+
     }
-
-
 }

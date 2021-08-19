@@ -26,20 +26,20 @@ namespace Mobius.ILasm.Core.BenchmarkDotNet
         [Benchmark]
         public void GenerateDynamicallyLinkedLibrary()
         {
-            var driver = new Driver(_logger);
+            var driver = new Driver(_logger, Driver.Target.Dll, false, false, false);
             using (var memoryStream = new MemoryStream())
             {
-                driver.Assemble(new string[] { "resources/helloworldconsole.il", "/dll" }, memoryStream);
+                driver.Assemble(new [] { File.ReadAllText("resources/helloworldconsole.il") }, memoryStream);
             }
         }
 
         [Benchmark]
         public void GenerateExecutable()
         {
-            var driver = new Driver(_logger);
+            var driver = new Driver(_logger, Driver.Target.Exe, false, false, false);
             using (var memoryStream = new MemoryStream())
             {
-                driver.Assemble(new string[] { "resources/helloworldconsole.il", "/exe" }, memoryStream);
+                driver.Assemble(new [] { File.ReadAllText("resources/helloworldconsole.il") }, memoryStream);
             }
         }
     }

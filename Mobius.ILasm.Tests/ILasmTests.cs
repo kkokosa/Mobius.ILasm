@@ -22,9 +22,9 @@ namespace Mobius.ILasm.Tests
         private static void AssembleAndVerify(string filename)
         {
             var logger = new Logger();
-            var driver = new Driver(logger);
-            var memoryStream = new MemoryStream();
-            var success = driver.Assemble(new string[] { filename, "/exe" }, memoryStream);
+            var driver = new Driver(logger, Driver.Target.Exe, false, false, false);
+            using var memoryStream = new MemoryStream();
+            var success = driver.Assemble(new [] { File.ReadAllText(filename) }, memoryStream);
 
             var buffer = memoryStream.ToArray();
             var assembly = Assembly.Load(buffer);
