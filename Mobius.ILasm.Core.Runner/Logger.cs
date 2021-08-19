@@ -1,8 +1,11 @@
-﻿using Mobius.ILasm.interfaces;
-using Mono.ILASM;
+﻿using Mono.ILASM;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using NLog;
+using NLog.Conditions;
+using NLog.Targets;
+using ILogger = Mobius.ILasm.interfaces.ILogger;
 
 namespace Mobius.ILasm.Core.Runner
 {
@@ -11,7 +14,18 @@ namespace Mobius.ILasm.Core.Runner
         private static readonly NLog.Logger _logger = NLog.LogManager.GetCurrentClassLogger();        
 
         public Logger()
-        {            
+        {
+            var config = new NLog.Config.LoggingConfiguration();
+            var logconsole = new NLog.Targets.ColoredConsoleTarget();
+            logconsole.Layout = "${time} [${pad:padding=5:inner=${level:uppercase=true}}] ${message}";
+
+            var highlightRule = new ConsoleRowHighlightingRule();
+            highlightRule.Condition = ConditionParser.ParseExpression("level == LogLevel.Error");
+            highlightRule.ForegroundColor = ConsoleOutputColor.Red;
+            logconsole.RowHighlightingRules.Add(highlightRule);
+
+            config.AddRule(LogLevel.Info, LogLevel.Fatal, logconsole);
+            NLog.LogManager.Configuration = config;
         }
 
         public void Error(string message)
