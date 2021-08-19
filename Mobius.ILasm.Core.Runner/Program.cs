@@ -16,13 +16,13 @@ namespace Mobius.ILasm.Core.Runner
             {
                 var parsedArgs = Args.Parse<Arguments>(args);
                 using var memoryStream = new MemoryStream();
-                var driver = new Driver(logger, parsedArgs.OutputType == "exe" ? Driver.Target.Exe : Driver.Target.Dll,
+                var driver = new Driver(logger, parsedArgs.Target,
                     parsedArgs.ShowParser, parsedArgs.Debug, parsedArgs.ShowTokens);
                 driver.Assemble(new [] { File.ReadAllText(parsedArgs.InputFile) }, memoryStream);
                 memoryStream.Seek(0, SeekOrigin.Begin);
 
                 var outputFilename = parsedArgs.OutputFile ??
-                                     $"{Path.GetFileNameWithoutExtension(parsedArgs.InputFile)}.{parsedArgs.OutputType}";
+                                     $"{Path.GetFileNameWithoutExtension(parsedArgs.InputFile)}.{parsedArgs.Target.ToString().ToLowerInvariant()}";
                 using (FileStream fileStream = new FileStream(outputFilename, FileMode.Create, FileAccess.Write))
                 {
                     memoryStream.WriteTo(fileStream);
@@ -59,15 +59,19 @@ namespace Mobius.ILasm.Core.Runner
 
         public string OutputFile { get; set; }
 
-        [ArgRegex("exe|dll"), ArgDefaultValue("exe")]
-        public string OutputType { get; set; }
+        [ArgDefaultValue(Driver.Target.Dll)]
+        public Driver.Target Target { get; set; }
 
+        [ArgShortcut("nai")]
         public bool NoAutoInherit { get; set; }
 
+        [ArgDefaultValue(false)]
         public bool Debug { get; set; }
 
+        [ArgDefaultValue(false), ArgShortcut("sp")]
         public bool ShowParser { get; set; }
 
+        [ArgDefaultValue(false), ArgShortcut("st")]
         public bool ShowTokens { get; set; }
 
         [ArgDescription("Strongname using the specified key file")]
