@@ -220,10 +220,12 @@ namespace Mobius.ILasm.Core
             catch (ILTokenizingException ilte)
             {
                 logger.Error(ilte.Location, "syntax error at token '" + ilte.Token + "'");
+                throw;
             }
             catch (Mono.ILASM.yyParser.yyException ye)
             {
                 logger.Error(scanner.Reader.Location, ye.Message);
+                throw;
             }
             catch (ILAsmException ie)
             {

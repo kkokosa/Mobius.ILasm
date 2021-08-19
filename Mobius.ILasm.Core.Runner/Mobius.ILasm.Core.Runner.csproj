@@ -16,6 +16,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="resources\bad_hellologger.il">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="resources\hellologger.il">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
