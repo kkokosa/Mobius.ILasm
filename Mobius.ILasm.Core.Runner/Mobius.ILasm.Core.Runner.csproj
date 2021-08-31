@@ -4,6 +4,8 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>net5.0</TargetFramework>
     <Platforms>x64</Platforms>
+    <IsPackable>false</IsPackable>
+    <AssemblyName>Mobius.ILasm.Core.Runner</AssemblyName>    
   </PropertyGroup>
 
   <ItemGroup>

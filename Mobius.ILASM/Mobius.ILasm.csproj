@@ -3,6 +3,16 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <Platform>x64</Platform>
+
+    <AssemblyName>Mobius.ILasm</AssemblyName>
+    <RootNamespace>Mobius.ILasm</RootNamespace>
+    <VersionPrefix>0.1</VersionPrefix>
+    <Description>Mobius.ILasm is a Common Intermediate Language (CIL) assembler available as a library, based on Mono assembler. It is used for testing in Mobius - .NET runtime written entirely in C#</Description>
+    <PackageTags>CIL;Mobius</PackageTags>
+    <Authors>Konrad Kokosa, Vivek Mapara</Authors>
+    <PackageProjectUrl>https://github.com/kkokosa/Mobius.ILasm</PackageProjectUrl>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/kkokosa/Mobius.ILasm.git</RepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup>
