@@ -9,6 +9,7 @@
 
 
 using System;
+using System.Collections.Generic;
 
 namespace Mono.ILASM {
 
@@ -19,7 +20,7 @@ namespace Mono.ILASM {
                 private BaseTypeRef ret_type;
                 private string name;
 
-		private bool is_resolved;
+        private bool is_resolved;
                 private PEAPI.Field peapi_field;
 
                 public FieldRef (TypeRef owner, BaseTypeRef ret_type, string name)
@@ -41,6 +42,9 @@ namespace Mono.ILASM {
 				return;
 
                         TypeDef owner_def = code_gen.TypeManager[owner.FullName];
+                        // TODO: Consider better message that contain context (method name?)
+                        if (owner_def is null)
+                            throw new Exception($"Unable to find type {owner.FullName}");
                         peapi_field = owner_def.ResolveField (name, ret_type, code_gen);
 
 			is_resolved = true;

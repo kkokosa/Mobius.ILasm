@@ -1,3 +1,14 @@
+The whole code is licesed under the terms of the MIT License, the same as the 
+Mono (https://github.com/mono/mono) runtime, from which IL assembling parts
+has been copied. 
+
+The output of the third party component (https://github.com/mono/mono/tree/main/mcs/jay), 
+but not the component itself, used for creating IL parser is licensed under 
+4-clause BSD license.
+
+The Licenses
+============
+
 MIT License
 
 Copyright (c) 2021 Konrad Kokosa

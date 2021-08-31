@@ -12,7 +12,8 @@ using System;
 
 namespace Mono.ILASM {
 
-        public class ILTokenizingException : ILAsmException {
+        public class ILTokenizingException : Mobius.ILasm.infrastructure.ILAsmException
+    {
 
                 public readonly string Token;
 

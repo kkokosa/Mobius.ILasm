@@ -9,9 +9,8 @@ namespace Mono.ILASM {
 	/// <summary>
 	/// </summary>
 	public class Location : ICloneable {
-		internal int line;
-		internal int column;
-
+		public int line;
+		public int column;
 
 		/// <summary>
 		/// </summary>

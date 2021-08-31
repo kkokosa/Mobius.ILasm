@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Mobius.ILasm.Core.Runner": {
+      "commandName": "Project",
+      "commandLineArgs": "-I .\\resources\\hellologger.il"
+    }
+  }
+}
