@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.31112.23
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mobius.ILasm.Core.Runner", "Mobius.ILasm.Core.Runner\Mobius.ILasm.Core.Runner.csproj", "{FE0FAFC2-926E-47EC-B9D6-4E6DF4507B3A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mobius.ILasm.Cli", "Mobius.ILasm.Cli\Mobius.ILasm.Cli.csproj", "{FE0FAFC2-926E-47EC-B9D6-4E6DF4507B3A}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mobius.ILasm.Core.BenchmarkDotNet", "Mobius.ILasm.Core.BenchmarkDotNet\Mobius.ILasm.Core.BenchmarkDotNet.csproj", "{D17FC705-0457-4578-AA34-6710148EA243}"
 EndProject

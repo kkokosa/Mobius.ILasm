@@ -5,7 +5,7 @@
     <TargetFramework>net5.0</TargetFramework>
     <Platforms>x64</Platforms>
     <IsPackable>false</IsPackable>
-    <AssemblyName>Mobius.ILasm.Core.Runner</AssemblyName>    
+    <AssemblyName>Mobius.ILasm.Cli</AssemblyName>    
   </PropertyGroup>
 
   <ItemGroup>

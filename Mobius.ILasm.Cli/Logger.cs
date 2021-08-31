@@ -7,7 +7,7 @@ using NLog.Conditions;
 using NLog.Targets;
 using ILogger = Mobius.ILasm.interfaces.ILogger;
 
-namespace Mobius.ILasm.Core.Runner
+namespace Mobius.ILasm
 {
     public class Logger : ILogger
     {
