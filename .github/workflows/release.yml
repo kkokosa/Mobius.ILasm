@@ -30,11 +30,11 @@ jobs:
       run: dotnet nuget push -s https://api.nuget.org/v3/index.json -k ${{secrets.NUGET_KEY}} *.nupkg
     - name: Publish - Windows
       if: github.ref == 'refs/heads/main'
-      run: dotnet publish -c release -r win-x64 -f net5 -p:PublishSingleFile=true -p:PublishTrimmed=true
-      working-directory: ./publish-runner
+      run: dotnet publish -c release -r win-x64 -f net5 -p:PublishSingleFile=true --self-contained false -p:IncludeAllContentForSelfExtract=true
+      working-directory: ./Mobius.ILasm.Cli
     - name: Upload
       if: github.ref == 'refs/heads/main'
       uses: actions/upload-artifact@main
       with:
         name: mobius-ilasm-win-x64
-        path: publish-runner/bin/release/net5/win-x64/publish
+        path: ./Mobius.ILasm.Cli/bin/release/net5.0/win-x64/publish
