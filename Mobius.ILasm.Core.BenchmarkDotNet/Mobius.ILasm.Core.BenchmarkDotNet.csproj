@@ -15,7 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Mobius.ILasm\Mobius.ILasm.csproj" />
+    <ProjectReference Include="..\Mobius.ILASM\Mobius.ILasm.csproj" />
   </ItemGroup>
 
   <ItemGroup>
