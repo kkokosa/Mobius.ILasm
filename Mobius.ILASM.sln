@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mobius.ILasm.Cli", "Mobius.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mobius.ILasm.Core.BenchmarkDotNet", "Mobius.ILasm.Core.BenchmarkDotNet\Mobius.ILasm.Core.BenchmarkDotNet.csproj", "{D17FC705-0457-4578-AA34-6710148EA243}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mobius.ILasm", "Mobius.ILasm\Mobius.ILasm.csproj", "{93DC6E05-D90F-444D-B6E2-887F7820E9FC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mobius.ILASM", "Mobius.ILasm\Mobius.ILasm.csproj", "{93DC6E05-D90F-444D-B6E2-887F7820E9FC}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mobius.ILasm.Tests", "Mobius.ILasm.Tests\Mobius.ILasm.Tests.csproj", "{82227D4A-0D07-4621-BDC8-A508AADB7ABF}"
 EndProject
