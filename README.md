@@ -18,6 +18,8 @@ Current refactorings include:
 - logger abstraction
 - minor renaming
 
+This is part of [Mobius](https://tooslowexception.com/mobius-net-runtime-running-on-net-core/) project - experimental .NET runtime running on .NET Core.
+
 ## Library
 
 Definitely the most useful use case, as it is the first available .NET library that you can use to assemble textual CIL files.
