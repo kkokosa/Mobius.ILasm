@@ -19,18 +19,17 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore
     - name: Build
-      run: dotnet build --no-restore
-    - name: Test
-      run: dotnet test --no-build --verbosity normal
+      run: dotnet build --no-restore -c Release
+      run: dotnet test --no-build --verbosity normal -c Release
     - name: Clear NuGets
       run: dotnet nuget locals all --clear
     - name: Pack
       run: dotnet pack --no-build --output . --configuration Release
     - name: Push NuGets
-      run: dotnet nuget push -s https://api.nuget.org/v3/index.json -k ${{secrets.NUGET_KEY}} *.nupkg
+      run: dotnet nuget push -s https://api.nuget.org/v3/index.json -k ${{secrets.NUGET_API_KEY}} *.nupkg
     - name: Publish - Windows
       if: github.ref == 'refs/heads/main'
-      run: dotnet publish -c release -r win-x64 -f net5 -p:PublishSingleFile=true --self-contained false -p:IncludeAllContentForSelfExtract=true
+      run: dotnet publish -c release -r win-x64 -f net5.0 -p:PublishSingleFile=true --self-contained false -p:IncludeAllContentForSelfExtract=true
       working-directory: ./Mobius.ILasm.Cli
     - name: Upload
       if: github.ref == 'refs/heads/main'
