@@ -25,7 +25,7 @@ Currently it targets .NET Standard 2.0 and is also available as Mobius.ILasm NuG
 var cil = File.ReadAllText(@"./trivial/helloworldconsole.il");
 
 var logger = new Logger();
-var driver = new Driver(logger, Driver.Target.Dll, false, false, false);
+var driver = new Driver(logger, Driver.Target.Dll, showParser: false, debuggingInfo: false, showTokens: false);
 
 // Assemble
 using var memoryStream = new MemoryStream();
