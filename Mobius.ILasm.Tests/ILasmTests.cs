@@ -12,7 +12,7 @@ namespace Mobius.ILasm.Tests
 {
     // TODO: Create source generator to iterate through directory and generate test methods
     // [GenerateMethods("./trivial/*.il")]
-    [GenerateTestMethods("./trivial/*.il")]
+    [GenerateTestMethods(@"C:\Users\Vivek.Mapara\source\repos\Mobius.ILASM\Mobius.ILasm.Tests\trivial")]
     public partial class ILasmTests
     {
         [Fact]
