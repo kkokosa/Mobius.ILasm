@@ -21,8 +21,6 @@ jobs:
     - name: Build
       run: dotnet build --no-restore -c Release
       run: dotnet test --no-build --verbosity normal -c Release
-    - name: Clear NuGets
-      run: dotnet nuget locals all --clear
     - name: Pack
       run: dotnet pack --no-build --output . --configuration Release
     - name: Push NuGets
