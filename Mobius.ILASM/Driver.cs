@@ -1,4 +1,4 @@
-﻿using Mobius.ILasm.infrastructure;
+using Mobius.ILasm.infrastructure;
 using Mobius.ILasm.interfaces;
 using Mono.ILASM;
 using System;
@@ -55,16 +55,21 @@ namespace Mobius.ILasm.Core
 
         public bool Assemble(string[] inputs, MemoryStream outputStream)
         {
-            System.Threading.Thread.CurrentThread.CurrentCulture = System.Globalization.CultureInfo.InvariantCulture;
-
-            // TODO: improve error reporting:
-            //  - return true/false
-            //  - expose Errors property as a list (filename, errormessage)
-            if (!Run(inputs, outputStream))
-                return false;
-            //Report.Message("Operation completed successfully");
-            logger.Info("Operation completed successfully");
-            return true;
+            var savedCulture = System.Threading.Thread.CurrentThread.CurrentCulture;            
+            try {
+                System.Threading.Thread.CurrentThread.CurrentCulture = System.Globalization.CultureInfo.InvariantCulture;
+                // TODO: improve error reporting:
+                //  - return true/false
+                //  - expose Errors property as a list (filename, errormessage)
+                if (!Run(inputs, outputStream))
+                    return false;
+                //Report.Message("Operation completed successfully");
+                logger.Info("Operation completed successfully");
+                return true;
+            }
+            finally {
+                System.Threading.Thread.CurrentThread.CurrentCulture = savedCulture;
+            }
         }
 
         public bool Run(string[] inputs, MemoryStream outputStream)
@@ -179,8 +184,7 @@ namespace Mobius.ILasm.Core
         {
             if (stream == null)
             {
-                logger.Error($"Stream is empty!");
-                Environment.Exit(2);
+                throw new ArgumentNullException(nameof(stream));
             }
             //TODO figure out how to log with the correct IL input filename
             //logger.Info($"Assembling '{file_path}' , {FileProcessor.GetListing(null)}, to {target_string} --> '{output_file}'");
@@ -236,7 +240,7 @@ namespace Mobius.ILasm.Core
             catch (Exception)
             {
                 // Console.Write("{0} ({1}, {2}): ", file_path, scanner.Reader.Location.line, scanner.Reader.Location.column);
-                Console.Write("{1}, {2}): ", scanner.Reader.Location.line, scanner.Reader.Location.column);
+                // Console.Write("{1}, {2}): ", scanner.Reader.Location.line, scanner.Reader.Location.column);
                 throw;
             }
             finally
