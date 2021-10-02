@@ -1,4 +1,4 @@
-﻿using Mobius.ILasm.infrastructure;
+using Mobius.ILasm.infrastructure;
 using Mobius.ILasm.interfaces;
 using Mono.ILASM;
 using System;
@@ -55,19 +55,34 @@ namespace Mobius.ILasm.Core
 
         public bool Assemble(string[] inputs, MemoryStream outputStream)
         {
-            System.Threading.Thread.CurrentThread.CurrentCulture = System.Globalization.CultureInfo.InvariantCulture;
+            return Assemble(inputs.Select(ConvertToStream).ToArray(), outputStream);
+        }
 
-            // TODO: improve error reporting:
-            //  - return true/false
-            //  - expose Errors property as a list (filename, errormessage)
-            if (!Run(inputs, outputStream))
-                return false;
-            //Report.Message("Operation completed successfully");
-            logger.Info("Operation completed successfully");
-            return true;
+        public bool Assemble(MemoryStream[] inputStreams, MemoryStream outputStream)
+        {
+            var savedCulture = System.Threading.Thread.CurrentThread.CurrentCulture;            
+            try {
+                System.Threading.Thread.CurrentThread.CurrentCulture = System.Globalization.CultureInfo.InvariantCulture;
+                // TODO: improve error reporting:
+                //  - return true/false
+                //  - expose Errors property as a list (filename, errormessage)
+                if (!Run(inputStreams, outputStream))
+                    return false;
+                //Report.Message("Operation completed successfully");
+                logger.Info("Operation completed successfully");
+                return true;
+            }
+            finally {
+                System.Threading.Thread.CurrentThread.CurrentCulture = savedCulture;
+            }
         }
 
         public bool Run(string[] inputs, MemoryStream outputStream)
+        {
+            return Run(inputs.Select(ConvertToStream).ToArray(), outputStream);
+        }
+
+        public bool Run(MemoryStream[] inputStreams, MemoryStream outputStream)
         {
             //Call the assembler without any arguments, results in console output of it's usage information
             //if (il_file_list.Count == 0)
@@ -79,12 +94,12 @@ namespace Mobius.ILasm.Core
             {
                 codegen = new CodeGen(logger, "", outputStream, target == Target.Dll, debugging_info, noautoinherit,
                     errors);
-                foreach (string input in inputs)
+                foreach (MemoryStream inputStream in inputStreams)
                 {
                     //TODO: The filepath needs to go as we will be using stream
                     //but we need a mechanism to keep information about every stream
                     // FileProcessor.FilePath = file_path;
-                    Process(input, outputStream);
+                    Process(inputStream);
                 }
 
                 if (scan_only)
@@ -175,19 +190,12 @@ namespace Mobius.ILasm.Core
     			}
 #endif
 
-        private void Process(string text, MemoryStream stream)
+        private void Process(MemoryStream inputStream)
         {
-            if (stream == null)
-            {
-                logger.Error($"Stream is empty!");
-                Environment.Exit(2);
-            }
             //TODO figure out how to log with the correct IL input filename
             //logger.Info($"Assembling '{file_path}' , {FileProcessor.GetListing(null)}, to {target_string} --> '{output_file}'");
 
-            byte[] byteArray = Encoding.ASCII.GetBytes(text);
-            MemoryStream inStream = new MemoryStream(byteArray);
-            StreamReader reader = new StreamReader(inStream);
+            StreamReader reader = new StreamReader(inputStream);
             ILTokenizer scanner = new ILTokenizer(reader);
             if (show_tokens)
                 scanner.NewTokenEvent += new NewTokenEvent(ShowToken);
@@ -236,7 +244,7 @@ namespace Mobius.ILasm.Core
             catch (Exception)
             {
                 // Console.Write("{0} ({1}, {2}): ", file_path, scanner.Reader.Location.line, scanner.Reader.Location.column);
-                Console.Write("{1}, {2}): ", scanner.Reader.Location.line, scanner.Reader.Location.column);
+                // Console.Write("{1}, {2}): ", scanner.Reader.Location.line, scanner.Reader.Location.column);
                 throw;
             }
             finally
@@ -249,6 +257,13 @@ namespace Mobius.ILasm.Core
         {
             Console.WriteLine("token: '{0}'", args.Token);
         }
+
+        private MemoryStream ConvertToStream(string text)
+        {
+            byte[] byteArray = Encoding.ASCII.GetBytes(text);
+            return new MemoryStream(byteArray);
+        }
+
         /*
         public void ShowMethodDef (object sender, MethodDefinedEventArgs args)
         {
