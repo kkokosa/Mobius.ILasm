@@ -242,6 +242,7 @@ namespace Mono.ILASM
             {
                 logger.Error(methoddef.StartLocation, "Duplicate method declaration: " + methoddef.Signature);
                 errors[nameof(TypeDef)] = $"Duplicate method declaration: {methoddef.Signature}";
+                return;
             }
 
             method_table.Add(methoddef.Signature, methoddef);
