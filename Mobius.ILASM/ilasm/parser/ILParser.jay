@@ -2150,14 +2150,26 @@ method_decl		: D_EMITBYTE int32
 			| D_VTENTRY int32 COLON int32 
 			| D_OVERRIDE type_spec DOUBLE_COLON method_name
                           {
+                                if (codegen.CurrentTypeDef == null)
+                                {
+                                    logger.Error(tokenizer.Location, $"Method '{codegen.CurrentMethodDef.Name}' is outside class scope and cannot be an override.");
+                                    return;
+                                }
+
                                 codegen.CurrentTypeDef.AddOverride (codegen.CurrentMethodDef,
                                         (BaseTypeRef) $2, (string) $4);
                                 
                           }
 			| D_OVERRIDE K_METHOD method_ref
                           {
-				codegen.CurrentTypeDef.AddOverride (codegen.CurrentMethodDef.Signature,
-					(BaseMethodRef) $3);
+                                if (codegen.CurrentTypeDef == null)
+                                {
+                                    logger.Error(tokenizer.Location, $"Method '{codegen.CurrentMethodDef.Name}' is outside class scope and cannot be an override.");
+                                    return;
+                                }
+
+                                codegen.CurrentTypeDef.AddOverride (codegen.CurrentMethodDef.Signature,
+                                        (BaseMethodRef) $3);
                           }
 			| D_OVERRIDE K_METHOD call_conv type type_spec DOUBLE_COLON method_name
 			  OPEN_ANGLE_BRACKET OPEN_BRACKET int32 CLOSE_BRACKET CLOSE_ANGLE_BRACKET
