@@ -4495,16 +4495,27 @@ namespace Mono.ILASM
         }
 
         void case_441()
-#line 2152 "C:\Apps\mono\mcs\ilasm\parser\ILParser.jay"
+#line default
         {
+            if (codegen.CurrentTypeDef == null)
+            {
+                logger.Error(tokenizer.Location, $"Method '{codegen.CurrentMethodDef.Name}' is outside class scope and cannot be an override.");
+                return;
+            }
+
             codegen.CurrentTypeDef.AddOverride(codegen.CurrentMethodDef,
                     (BaseTypeRef)yyVals[-2 + yyTop], (string)yyVals[0 + yyTop]);
-
         }
 
         void case_442()
-#line 2158 "C:\Apps\mono\mcs\ilasm\parser\ILParser.jay"
+#line default
         {
+            if (codegen.CurrentTypeDef == null)
+            {
+                logger.Error(tokenizer.Location, $"Method '{codegen.CurrentMethodDef.Name}' is outside class scope and cannot be an override.");
+                return;
+            }
+
             codegen.CurrentTypeDef.AddOverride(codegen.CurrentMethodDef.Signature,
                 (BaseMethodRef)yyVals[0 + yyTop]);
         }
