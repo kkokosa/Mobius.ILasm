@@ -1,6 +1,5 @@
 ﻿// created by jay 0.7 (c) 1998 Axel.Schreiner@informatik.uni-osnabrueck.de
 
-#line 2 "C:\Apps\mono\mcs\ilasm\parser\ILParser.jay"
 //
 // Mono::ILASM::ILParser
 // 
@@ -13,9 +12,9 @@ using System;
 using System.IO;
 using System.Collections;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Reflection;
 using System.Security;
+using System.Text;
 using System.Security.Permissions;
 
 using MIPermission = Mono.ILASM.Permission;
@@ -135,6 +134,42 @@ namespace Mono.ILASM
 
             IPermission iper = (IPermission)t.GetMethod("CreatePermission").Invoke(obj, null);
             return new PermPair((PEAPI.SecurityAction)action, iper);
+        }
+
+        PermPair PermissionSetBytesToPermPair(short securityAction, byte[] permissionSetBlob)
+        {
+            if (permissionSetBlob[0] == (byte)'.')
+            {
+                // See ECMA-335 6th Edition II.22.11 for explanation on the newer format.
+                // > [Note: The first edition of this standard specified an XML encoding of a permission set.
+                // > Implementations should continue supporting this encoding for backward compatibility. end note]
+                logger.Warning(tokenizer.Location, "Newer (non-XML) permission set format is not yet supported by this library. This permission set will be ignored.");
+                return new PermPair((PEAPI.SecurityAction)securityAction, null);
+            }
+
+            return PermissionSetXmlToPermPair(securityAction, Encoding.Unicode.GetString(permissionSetBlob));
+        }
+
+        PermPair PermissionSetXmlToPermPair(short securityAction, string permissionSetXml)
+        {
+            var permissionSet = (System.Security.PermissionSet)null;
+            if (CurrentRuntime.IsNetFramework)
+            {
+                var psa = new PermissionSetAttribute((System.Security.Permissions.SecurityAction)securityAction) { XML = permissionSetXml };
+                try
+                {
+                    permissionSet = psa.CreatePermissionSet();
+                }
+                catch (XmlSyntaxException ex)
+                {
+                    logger.Error(tokenizer.Location, $"Failed to parse permission set XML: {ex.Message}");
+                }
+            }
+            else
+            {
+                logger.Warning(tokenizer.Location, "Code Access Security is not supported on this runtime. This permission set will be ignored.");
+            }
+            return new PermPair((PEAPI.SecurityAction)securityAction, permissionSet);
         }
 
         public ILParser(CodeGen codegen, ILTokenizer tokenizer, ILogger logger, Dictionary<string, string> errors)
@@ -5214,20 +5249,15 @@ namespace Mono.ILASM
         }
 
         void case_567()
-#line 2926 "C:\Apps\mono\mcs\ilasm\parser\ILParser.jay"
+#line default
         {
-            System.Text.UnicodeEncoding ue = new System.Text.UnicodeEncoding();
-            PermissionSetAttribute psa = new PermissionSetAttribute((System.Security.Permissions.SecurityAction)(short)yyVals[-2 + yyTop]);
-            psa.XML = ue.GetString((byte[])yyVals[0 + yyTop]);
-            yyVal = new PermPair((PEAPI.SecurityAction)yyVals[-2 + yyTop], psa.CreatePermissionSet());
+            yyVal = PermissionSetBytesToPermPair((short)yyVals[-2 + yyTop], (byte[])yyVals[0 + yyTop]);
         }
 
         void case_568()
-#line 2933 "C:\Apps\mono\mcs\ilasm\parser\ILParser.jay"
+#line default
         {
-            PermissionSetAttribute psa = new PermissionSetAttribute((System.Security.Permissions.SecurityAction)(short)yyVals[-1 + yyTop]);
-            psa.XML = (string)yyVals[0 + yyTop];
-            yyVal = new PermPair((PEAPI.SecurityAction)yyVals[-1 + yyTop], psa.CreatePermissionSet());
+            yyVal = PermissionSetXmlToPermPair((short)yyVals[-1 + yyTop], (string)yyVals[0 + yyTop]);
         }
 
         void case_570()
