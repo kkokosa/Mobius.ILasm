@@ -1,4 +1,4 @@
-﻿// created by jay 0.7 (c) 1998 Axel.Schreiner@informatik.uni-osnabrueck.de
+// created by jay 0.7 (c) 1998 Axel.Schreiner@informatik.uni-osnabrueck.de
 
 //
 // Mono::ILASM::ILParser
@@ -7880,7 +7880,7 @@ new System.Reflection.AssemblyName();
             public yyUnexpectedEof(string message) : base(message)
             {
             }
-            public yyUnexpectedEof() : base("")
+            public yyUnexpectedEof() : base("Unexpected end of file")
             {
             }
         }
