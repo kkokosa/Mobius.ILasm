@@ -136,6 +136,9 @@ namespace Mobius.ILasm.Core
                     //File.Delete(output_file);
                     throw;
                 }
+
+                if (errors.Any())
+                    return false;
             }
             catch (ILAsmException e)
             {
