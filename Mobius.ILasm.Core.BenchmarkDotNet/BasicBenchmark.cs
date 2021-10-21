@@ -1,4 +1,4 @@
-﻿using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Diagnostics.Windows.Configs;
 using Mobius.ILasm.infrastructure;
 using Mobius.ILasm.interfaces;
@@ -26,7 +26,7 @@ namespace Mobius.ILasm.Core.BenchmarkDotNet
         [Benchmark]
         public void GenerateDynamicallyLinkedLibrary()
         {
-            var driver = new Driver(_logger, Driver.Target.Dll, false, false, false);
+            var driver = new Driver(_logger, Driver.Target.Dll);
             using (var memoryStream = new MemoryStream())
             {
                 driver.Assemble(new [] { File.ReadAllText("resources/helloworldconsole.il") }, memoryStream);
@@ -36,7 +36,7 @@ namespace Mobius.ILasm.Core.BenchmarkDotNet
         [Benchmark]
         public void GenerateExecutable()
         {
-            var driver = new Driver(_logger, Driver.Target.Exe, false, false, false);
+            var driver = new Driver(_logger, Driver.Target.Exe);
             using (var memoryStream = new MemoryStream())
             {
                 driver.Assemble(new [] { File.ReadAllText("resources/helloworldconsole.il") }, memoryStream);

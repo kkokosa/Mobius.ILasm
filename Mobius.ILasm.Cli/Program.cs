@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Reflection;
 using System.Runtime.Loader;
@@ -17,8 +17,11 @@ namespace Mobius.ILasm
             {
                 var parsedArgs = Args.Parse<Arguments>(args);
                 using var memoryStream = new MemoryStream();
-                var driver = new Driver(logger, parsedArgs.Target,
-                    parsedArgs.ShowParser, parsedArgs.Debug, parsedArgs.ShowTokens);
+                var driver = new Driver(logger, parsedArgs.Target, new DriverSettings {
+                    ShowParser = parsedArgs.ShowParser,
+                    DebuggingInfo = parsedArgs.Debug,
+                    ShowTokens = parsedArgs.ShowTokens
+                });
                 driver.Assemble(new [] { File.ReadAllText(parsedArgs.InputFile) }, memoryStream);
                 memoryStream.Seek(0, SeekOrigin.Begin);
 
