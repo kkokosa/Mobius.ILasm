@@ -39,6 +39,21 @@ namespace Mobius.ILasm.Tests
         }
 
         [Fact]
+        public void Duplicate_Field_IsReported()
+        {
+            var errors = AssembleAndGetErrors(@"
+                .class C
+                    extends System.Object
+                {
+                    .field int32 f
+                    .field int32 f
+                }
+            ");
+
+            Assert.Single(errors, "Duplicate method declaration: int32 f");
+        }
+
+        [Fact]
         public void MissingManifestResource_IsReported()
         {
             var errors = AssembleAndGetErrors(@".mresource public NoSuchFile.txt {}");
