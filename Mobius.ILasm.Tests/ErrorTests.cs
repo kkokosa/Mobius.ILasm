@@ -50,7 +50,7 @@ namespace Mobius.ILasm.Tests
                 }
             ");
 
-            Assert.Single(errors, "Duplicate method declaration: int32 f");
+            Assert.Single(errors, "Duplicate field declaration: System.Int32 f");
         }
 
         [Fact]
