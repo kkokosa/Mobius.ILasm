@@ -1,13 +1,10 @@
-using Mobius.ILasm.infrastructure;
 using Mobius.ILasm.interfaces;
 using Mono.ILASM;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using ILAsmException = Mobius.ILasm.infrastructure.ILAsmException;
 
 namespace Mobius.ILasm.Core
@@ -25,32 +22,27 @@ namespace Mobius.ILasm.Core
 
         private Target target = Target.Exe;
 
-        private bool show_tokens = false;
-
         // private bool show_method_def = false;
         // private bool show_method_ref = false;
-        private bool show_parser = false;
         private bool scan_only = false;
-        private bool debugging_info = false;
         private bool keycontainer = false;
         private string keyname;
 
         private CodeGen codegen;
         private readonly ILogger logger;
+        private readonly DriverSettings settings;
         private Dictionary<string, string> errors;
 #if HAS_MONO_SECURITY
     			private StrongName sn;
 #endif
         bool noautoinherit;
 
-        public Driver(ILogger logger, Target target, bool showParser, bool debuggingInfo, bool showTokens)
+        public Driver(ILogger logger, Target target, DriverSettings settings = null)
         {
             this.logger = logger;
             this.errors = new Dictionary<string, string>();
             this.target = target;
-            this.show_parser = showParser;
-            this.debugging_info = debuggingInfo;
-            this.show_tokens = showTokens;
+            this.settings = settings ?? DriverSettings.Default;
         }
 
         public bool Assemble(string[] inputs, MemoryStream outputStream)
@@ -60,7 +52,7 @@ namespace Mobius.ILasm.Core
 
         public bool Assemble(MemoryStream[] inputStreams, MemoryStream outputStream)
         {
-            var savedCulture = System.Threading.Thread.CurrentThread.CurrentCulture;            
+            var savedCulture = System.Threading.Thread.CurrentThread.CurrentCulture;
             try {
                 System.Threading.Thread.CurrentThread.CurrentCulture = System.Globalization.CultureInfo.InvariantCulture;
                 // TODO: improve error reporting:
@@ -92,7 +84,7 @@ namespace Mobius.ILasm.Core
             //    output_file = CreateOutputFilename();
             try
             {
-                codegen = new CodeGen(logger, "", outputStream, target == Target.Dll, debugging_info, noautoinherit,
+                codegen = new CodeGen(logger, "", outputStream, target == Target.Dll, settings.DebuggingInfo, noautoinherit,
                     errors);
                 foreach (MemoryStream inputStream in inputStreams)
                 {
@@ -200,7 +192,7 @@ namespace Mobius.ILasm.Core
 
             StreamReader reader = new StreamReader(inputStream);
             ILTokenizer scanner = new ILTokenizer(reader);
-            if (show_tokens)
+            if (settings.ShowTokens)
                 scanner.NewTokenEvent += new NewTokenEvent(ShowToken);
             //if (show_method_def)
             //        MethodTable.MethodDefinedEvent += new MethodDefinedEvent (ShowMethodDef);
@@ -218,11 +210,11 @@ namespace Mobius.ILasm.Core
                 return;
             }
 
-            ILParser parser = new ILParser(codegen, scanner, this.logger, errors);
+            ILParser parser = new ILParser(codegen, scanner, settings.ResourceResolver, this.logger, errors);
             //codegen.BeginSourceFile(file_path);
             try
             {
-                if (show_parser)
+                if (settings.ShowParser)
                     parser.yyparse(new ScannerAdapter(scanner),
                         new Mono.ILASM.yydebug.yyDebugSimple());
                 else

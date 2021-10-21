@@ -26,9 +26,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="trivial\helloworldconsole.il">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    <None Update="trivial\*.*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
-
 </Project>

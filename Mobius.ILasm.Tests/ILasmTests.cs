@@ -1,12 +1,14 @@
 using Mobius.ILasm.Core;
 using Mobius.ILasm.interfaces;
-using System;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using Xunit;
 using Mobius.ILasm.Tests.SourceGenerator;
+using Mobius.ILasm.infrastructure;
+using Moq;
+using System;
 
 namespace Mobius.ILasm.Tests
 {
@@ -15,16 +17,26 @@ namespace Mobius.ILasm.Tests
     [GenerateTestMethods("./trivial/*.il")]
     public partial class ILasmTests
     {
-        [Fact]
-        public void Test_helloworldconsole() 
-            => AssembleAndVerify("./trivial/helloworldconsole.il");        
+        [Theory]
+        [InlineData("helloworldconsole.il")]
+        [InlineData("resource.il")]
+        public void Test(string fileName) 
+            => AssembleAndVerify($"./trivial/{fileName}");
 
         private static void AssembleAndVerify(string filename)
         {
-            var logger = new Logger();
-            var driver = new Driver(logger, Driver.Target.Exe, false, false, false);
+            var logger = new Mock<ILogger>();
+            var driver = new Driver(logger.Object, Driver.Target.Exe, new DriverSettings
+            {
+                ResourceResolver = new FileResourceResolver("./trivial")
+            });
             using var memoryStream = new MemoryStream();
             var success = driver.Assemble(new [] { File.ReadAllText(filename) }, memoryStream);
+            Assert.True(success, string.Join(
+                Environment.NewLine, logger.Invocations
+                    .Where(i => i.Method.Name == nameof(ILogger.Error))
+                    .Select(i => i.Arguments.Last())
+            ));
 
             var buffer = memoryStream.ToArray();
             var assembly = Assembly.Load(buffer);
@@ -35,39 +47,11 @@ namespace Mobius.ILasm.Tests
                                  .FirstOrDefault(line => line.StartsWith("// Assert result"));
             Assert.NotNull(assertLine);
             
-            var match = Regex.Match(assertLine, @"\/\/ Assert result (\d+)");
+            var match = Regex.Match(assertLine, @"// Assert result (\d+)");
             Assert.True(match.Success);
 
             var expected = int.Parse(match.Groups[1].Value);
             Assert.Equal(expected, result);
-        }
-    }
-
-    // TODO: Mock it with Moq
-    internal class Logger : ILogger
-    {
-        public Logger()
-        {
-        }
-
-        public void Error(string message)
-        {            
-        }
-
-        public void Error(Mono.ILASM.Location location, string message)
-        {
-        }
-
-        public void Info(string message)
-        {         
-        }
-
-        public void Warning(string message)
-        {
-        }
-
-        public void Warning(Mono.ILASM.Location location, string message)
-        {
         }
     }
 }
