@@ -417,6 +417,14 @@ namespace Mono.ILASM
             }
             else
             {
+                if (global_method_table[methoddef.Signature] != null)
+                {
+                    // Same as current_typedef.AddMethodDef -- might be worth consolidating
+                    logger.Error(methoddef.StartLocation, "Duplicate method declaration: " + methoddef.Signature);
+                    errors[nameof(CodeGen)] = $"Duplicate method declaration: {methoddef.Signature}";
+                    return;
+                }
+
                 global_method_table.Add(methoddef.Signature,
                                 methoddef);
             }
