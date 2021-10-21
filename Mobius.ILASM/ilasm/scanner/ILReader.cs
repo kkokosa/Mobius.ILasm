@@ -71,7 +71,7 @@ namespace Mono.ILASM {
 			int read = DoRead ();
 			if (read == '\n')
 				location.NewLine ();
-			else
+			else if (read != -1)
 				location.NextColumn ();
 			return read;
 		}

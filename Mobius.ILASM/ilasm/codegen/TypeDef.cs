@@ -231,6 +231,7 @@ namespace Mono.ILASM
             {
                 logger.Error("Duplicate field declaration: " + fielddef.Type.FullName + " " + fielddef.Name);
                 errors[nameof(TypeDef)] = $"Duplicate field declaration: {fielddef.Type.FullName} {fielddef.Name}";
+                return;
             }
             field_table.Add(entry, fielddef);
             field_list.Add(fielddef);

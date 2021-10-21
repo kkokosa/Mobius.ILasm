@@ -1,4 +1,4 @@
-﻿// created by jay 0.7 (c) 1998 Axel.Schreiner@informatik.uni-osnabrueck.de
+// created by jay 0.7 (c) 1998 Axel.Schreiner@informatik.uni-osnabrueck.de
 
 //
 // Mono::ILASM::ILParser
@@ -39,6 +39,7 @@ namespace Mono.ILASM
         private ILTokenizer tokenizer;
         const int yacc_verbose_flag = 0;
         KeyValuePair<string, TypeAttr> current_extern;
+        private readonly IManifestResourceResolver resourceResolver;
         private readonly ILogger logger;
         private Dictionary<string, string> errors;
 
@@ -172,10 +173,11 @@ namespace Mono.ILASM
             return new PermPair((PEAPI.SecurityAction)securityAction, permissionSet);
         }
 
-        public ILParser(CodeGen codegen, ILTokenizer tokenizer, ILogger logger, Dictionary<string, string> errors)
+        public ILParser(CodeGen codegen, ILTokenizer tokenizer, IManifestResourceResolver resourceResolver, ILogger logger, Dictionary<string, string> errors)
         {
             this.codegen = codegen;
             this.tokenizer = tokenizer;
+            this.resourceResolver = resourceResolver;
             this.logger = logger;
             this.errors = errors;
         }
@@ -5370,14 +5372,17 @@ new System.Reflection.AssemblyName();
         }
 
         void case_665()
-#line 3316 "C:\Apps\mono\mcs\ilasm\parser\ILParser.jay"
+#line default
         {
-            FileStream s = new FileStream((string)yyVals[0 + yyTop], FileMode.Open, FileAccess.Read);
-            byte[] buff = new byte[s.Length];
-            s.Read(buff, 0, (int)s.Length);
-            s.Close();
+            var path = (string)yyVals[0 + yyTop];
+            if (!resourceResolver.TryGetResourceBytes(path, out var bytes, out var error))
+            {
+                logger.Error(tokenizer.Location, error);
+                errors[nameof(ILParser)] = error;
+                return;
+            }
 
-            codegen.AddManifestResource(new ManifestResource((string)yyVals[0 + yyTop], buff, (yyVals[-1 + yyTop] == null) ? 0 : (uint)yyVals[-1 + yyTop]));
+            codegen.AddManifestResource(new ManifestResource((string)yyVals[0 + yyTop], bytes, (yyVals[-1 + yyTop] == null) ? 0 : (uint)yyVals[-1 + yyTop]));
         }
 
         void case_676()
@@ -7880,7 +7885,7 @@ new System.Reflection.AssemblyName();
             public yyUnexpectedEof(string message) : base(message)
             {
             }
-            public yyUnexpectedEof() : base("")
+            public yyUnexpectedEof() : base("Unexpected end of file")
             {
             }
         }
