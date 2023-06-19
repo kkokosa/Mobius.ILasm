@@ -1,16 +1,16 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <Platforms>x64</Platforms>
     <IsPackable>false</IsPackable>
     <AssemblyName>Mobius.ILasm.Cli</AssemblyName>    
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="NLog" Version="4.7.9" />
-    <PackageReference Include="PowerArgs" Version="3.6.0" />
+    <PackageReference Include="NLog" Version="5.2.0" />
+    <PackageReference Include="PowerArgs" Version="4.0.2" />
   </ItemGroup>
 
   <ItemGroup>
